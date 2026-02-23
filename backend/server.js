@@ -16,6 +16,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://mangalenterprises.vercel.app',
+    'https://mangalenterprises.onrender.com',
     /\.vercel\.app$/   // allows any vercel preview URLs too
   ],
   credentials: true
