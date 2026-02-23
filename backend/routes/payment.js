@@ -7,19 +7,26 @@ const User = require('../models/User');
 const Order = require('../models/Order');
 
 /* ========================================
-   RAZORPAY INSTANCE (Test Mode)
+   RAZORPAY INSTANCE (Test Mode - Lazy Init)
    ========================================
-   Uses test keys from .env — no real money
-   is charged. Use Razorpay's test card:
-     Card: 4111 1111 1111 1111
-     Expiry: Any future date
-     CVV: Any 3 digits
-     OTP: Any valid OTP (or skip in test)
+   Initialized only when a payment route is
+   called, so the server won't crash if keys
+   are not yet configured.
    ======================================== */
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpayInstance = null;
+
+function getRazorpay() {
+    if (!razorpayInstance) {
+        if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+            throw new Error('Razorpay keys not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
+        }
+        razorpayInstance = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+    }
+    return razorpayInstance;
+}
 
 /* ========================================
    POST /api/payment/create-order
@@ -40,7 +47,7 @@ router.post('/create-order', async (req, res) => {
             payment_capture: 1, // Auto-capture payment
         };
 
-        const order = await razorpay.orders.create(options);
+        const order = await getRazorpay().orders.create(options);
 
         console.log('💳 Razorpay Order Created:', order.id, '| ₹' + amount);
 
