@@ -13,7 +13,11 @@ const app = express();
    MIDDLEWARE
 =========================== */
 app.use(cors({
-  origin: ['http://localhost:3000'],
+  origin: [
+    'http://localhost:3000',
+    'https://mangalenterprises.vercel.app',
+    /\.vercel\.app$/   // allows any vercel preview URLs too
+  ],
   credentials: true
 }));
 

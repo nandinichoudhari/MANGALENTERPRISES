@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { apiUrl } from '../api';
 
 const UserContext = createContext();
 
@@ -12,15 +13,15 @@ export const UserProvider = ({ children }) => {
   // Fetch user orders on login
   const fetchUserOrders = async () => {
     if (!localStorage.getItem('loggedIn') === 'true') return;
-    
+
     setLoading(true);
     try {
       const phone = localStorage.getItem('phone') || "8866440011";
-      const response = await fetch(`http://localhost:5000/api/orders`, {
+      const response = await fetch(apiUrl(`/api/orders`), {
         credentials: 'include' // For auth cookies if needed
       });
       const result = await response.json();
-      
+
       if (result.success) {
         setUser({
           phone: result.user?.phone || phone,
@@ -48,12 +49,12 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ 
-      user, 
-      ordersCount, 
-      loading, 
-      fetchUserOrders, 
-      logout 
+    <UserContext.Provider value={{
+      user,
+      ordersCount,
+      loading,
+      fetchUserOrders,
+      logout
     }}>
       {children}
     </UserContext.Provider>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { apiUrl } from '../api';
 
 function Orders() {
   const [orders, setOrders] = useState([]);
@@ -14,7 +15,7 @@ function Orders() {
     }
 
     // Fetch from YOUR backend /api/orders endpoint
-    fetch('http://localhost:5000/api/orders')
+    fetch(apiUrl('/api/orders'))
       .then(res => res.json())
       .then(data => {
         setOrders(data.orders || []);
@@ -34,7 +35,7 @@ function Orders() {
           <h2 className="page-title">My Orders ({orders.length})</h2>
           <Link to="/menu" className="continue-shopping">← Continue Shopping</Link>
         </div>
-        
+
         {orders.length === 0 ? (
           <div className="empty-cart">
             <div className="empty-icon">🧾</div>
@@ -44,18 +45,18 @@ function Orders() {
         ) : (
           orders.map(order => (
             <div key={order._id} className="order-card" style={{
-              border: '1px solid #ddd', 
-              margin: '1rem 0', 
-              padding: '1rem', 
+              border: '1px solid #ddd',
+              margin: '1rem 0',
+              padding: '1rem',
               borderRadius: '8px'
             }}>
-              <div style={{display: 'flex', justifyContent: 'space-between'}}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <strong>Order #{order._id?.slice(-6)}</strong>
                 <span>{new Date(order.timestamp).toLocaleDateString()}</span>
               </div>
               <div>Total: <strong>₹{order.total}</strong></div>
               <div>{order.items.length} items • {order.status}</div>
-              <div style={{fontSize: '0.9rem', color: '#666'}}>
+              <div style={{ fontSize: '0.9rem', color: '#666' }}>
                 {order.paymentMethod} • {new Date(order.timestamp).toLocaleTimeString()}
               </div>
             </div>
