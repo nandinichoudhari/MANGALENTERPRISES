@@ -21,7 +21,7 @@ const font = "'Inter','Segoe UI',system-ui,sans-serif";
 
 /* ─── tiny helpers ─── */
 const rupee = n => '₹' + Number(n || 0).toLocaleString('en-IN');
-const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
 const fmtTime = d => {
   if (!d) return '—';
   const dt = new Date(d);
@@ -451,12 +451,7 @@ function PayBadge({ method }) {
   return <span style={{ background: bg, color: fg, padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>{m}</span>;
 }
 
-function StatusBadge({ status }) {
-  const s = (status || 'confirmed').toLowerCase();
-  const map = { confirmed: { bg: '#E8F5E9', fg: C.green }, pending: { bg: '#FFF3E0', fg: C.amber }, cancelled: { bg: '#FFEBEE', fg: C.red } };
-  const { bg, fg } = map[s] || map.confirmed;
-  return <span style={{ background: bg, color: fg, padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, textTransform: 'capitalize' }}>{s}</span>;
-}
+
 
 function Empty({ msg }) {
   return <div style={{ textAlign: 'center', padding: '48px 20px', color: C.light, fontSize: 14 }}>{msg}</div>;
