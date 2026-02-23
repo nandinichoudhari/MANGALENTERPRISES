@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { apiUrl } from './api';
 
 /* ─── colour tokens ─── */
 const C = {
@@ -43,7 +44,7 @@ function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const r = await fetch('/api/admin/data');
+      const r = await fetch(apiUrl('/api/admin/data'));
       if (r.ok) setData(await r.json());
     } catch { /* backend offline */ }
     setLoading(false);
@@ -52,7 +53,7 @@ function AdminDashboard() {
   /* ── update order status ────────────────── */
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const r = await fetch('/api/update-order-status', {
+      const r = await fetch(apiUrl('/api/update-order-status'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, status: newStatus })

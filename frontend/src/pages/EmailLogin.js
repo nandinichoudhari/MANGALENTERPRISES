@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from '../api';
 
 function EmailLogin() {
   const [email, setEmail] = useState("");
@@ -13,7 +14,7 @@ function EmailLogin() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/send-email-otp', {
+      const res = await fetch(apiUrl('/api/send-email-otp'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -40,7 +41,7 @@ function EmailLogin() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/verify-email-otp', {
+      const res = await fetch(apiUrl('/api/verify-email-otp'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })

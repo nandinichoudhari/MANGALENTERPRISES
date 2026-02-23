@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { apiUrl } from '../api';
 
 const STEPS = [
   { key: 'confirmed', label: 'Order Confirmed', icon: '✓' },
@@ -34,12 +35,12 @@ function User() {
     setLoading(true);
     try {
       // Fetch orders from the Order collection (has full address + payment)
-      const ordRes = await fetch(`/api/myorders?phone=${phone}`);
+      const ordRes = await fetch(apiUrl(`/api/myorders?phone=${phone}`));
       const ordData = await ordRes.json();
       setOrders(ordData.orders || []);
 
       // Fetch saved addresses
-      const addrRes = await fetch(`/api/user-addresses?phone=${phone}`);
+      const addrRes = await fetch(apiUrl(`/api/user-addresses?phone=${phone}`));
       const addrData = await addrRes.json();
       setAddresses(addrData.addresses || []);
     } catch {
@@ -52,7 +53,7 @@ function User() {
     setSaving(true);
     try {
       const oldPhone = userData.phone;
-      const res = await fetch('/api/update-profile', {
+      const res = await fetch(apiUrl('/api/update-profile'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: oldPhone, name: editForm.name, newPhone: editForm.phone })

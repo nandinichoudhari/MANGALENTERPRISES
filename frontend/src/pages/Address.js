@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from '../api';
 
 function Address() {
   const [address, setAddress] = useState({
@@ -30,7 +31,7 @@ function Address() {
   const fetchUserAddresses = async (phone, autoSelectLatest = false) => {
     setLoadingAddresses(true);
     try {
-      const response = await fetch(`/api/user-addresses?phone=${phone}`);
+      const response = await fetch(apiUrl(`/api/user-addresses?phone=${phone}`));
       const result = await response.json();
 
       if (result.success) {
@@ -82,7 +83,7 @@ function Address() {
     try {
       console.log("📱 Sending address for phone:", loggedInPhone);
 
-      const response = await fetch('/api/save-address', {
+      const response = await fetch(apiUrl('/api/save-address'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

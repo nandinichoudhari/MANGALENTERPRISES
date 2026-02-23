@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from '../api';
 
 function Payment() {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ function Payment() {
 
       console.log('📤 Sending COD order to backend:', JSON.stringify(orderDetails.address));
 
-      const response = await fetch('/api/place-order', {
+      const response = await fetch(apiUrl('/api/place-order'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderDetails),
@@ -126,7 +127,7 @@ function Payment() {
       }
 
       // Step 2: Create order on backend
-      const response = await fetch('/api/payment/create-order', {
+      const response = await fetch(apiUrl('/api/payment/create-order'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -158,7 +159,7 @@ function Payment() {
           console.log('✅ Razorpay payment response:', response);
 
           try {
-            const verifyRes = await fetch('/api/payment/verify', {
+            const verifyRes = await fetch(apiUrl('/api/payment/verify'), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
