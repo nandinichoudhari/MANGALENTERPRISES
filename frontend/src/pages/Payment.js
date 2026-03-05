@@ -332,19 +332,6 @@ function Payment() {
         </div>
       </div>
 
-      {/* Test Mode Info */}
-      {paymentMethod === 'razorpay' && (
-        <div className="razorpay-test-info">
-          <h4>🧪 Test Mode — No Real Money Charged</h4>
-          <p>Use these dummy credentials:</p>
-          <ul>
-            <li><strong>Card:</strong> 4111 1111 1111 1111</li>
-            <li><strong>Expiry:</strong> Any future date</li>
-            <li><strong>CVV:</strong> Any 3 digits (e.g. 123)</li>
-            <li><strong>UPI:</strong> success@razorpay</li>
-          </ul>
-        </div>
-      )}
 
       <div className="cart-actions">
         <button
