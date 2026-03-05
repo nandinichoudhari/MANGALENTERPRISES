@@ -81,14 +81,19 @@ app.get('/check-email', async (req, res) => {
    EMAIL TRANSPORTER
 =========================== */
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,            // use SSL on port 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   },
   tls: {
     rejectUnauthorized: false
-  }
+  },
+  // Force IPv4 — Render's free-tier doesn't support IPv6 outbound,
+  // which causes "connect ENETUNREACH" when Gmail resolves to IPv6
+  family: 4
 });
 
 // Verify transporter on startup
