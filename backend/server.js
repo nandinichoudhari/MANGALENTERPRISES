@@ -1,9 +1,19 @@
+// MUST be FIRST — force ALL DNS lookups to IPv4 before anything else loads
+const dns = require('dns');
+const origLookup = dns.lookup;
+dns.lookup = function (hostname, options, callback) {
+  if (typeof options === 'function') { callback = options; options = {}; }
+  if (typeof options === 'number') { options = { family: options }; }
+  options = Object.assign({}, options, { family: 4 }); // Force IPv4
+  return origLookup.call(this, hostname, options, callback);
+};
+
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-// Email is sent via Brevo HTTP API (fetch) — no SMTP, no extra package
+const nodemailer = require('nodemailer');
 const User = require('./models/User');
 const jwt = require('jsonwebtoken');
 
@@ -51,63 +61,55 @@ app.get('/', (req, res) => {
 });
 
 /* ===========================
-   EMAIL via BREVO HTTP API
-   Render blocks SMTP ports 465/587, so we use
-   Brevo which sends emails over HTTPS (port 443).
-   Free plan: 300 emails/day to ANY recipient.
+   EMAIL TRANSPORTER (Gmail SMTP)
+   DNS lookup is monkey-patched above to force IPv4
 =========================== */
-async function sendEmailViaBrevo(toEmail, subject, htmlContent) {
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'api-key': process.env.BREVO_API_KEY,
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify({
-      sender: {
-        name: 'Mangal Enterprises',
-        email: process.env.EMAIL_USER || 'mangalenterprises5225@gmail.com'
-      },
-      to: [{ email: toEmail }],
-      subject: subject,
-      htmlContent: htmlContent
-    })
-  });
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: { rejectUnauthorized: false },
+  family: 4,
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000
+});
 
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.message || `Brevo API error: ${response.status}`);
-  }
-  return result;
-}
+// Verify on startup
+transporter.verify()
+  .then(() => console.log('✅ Email transporter ready (IPv4 forced)'))
+  .catch(err => console.error('❌ Email transporter ERROR:', err.message));
 
-// Email config diagnostic endpoint
+// Diagnostic endpoint
 app.get('/check-email', async (req, res) => {
   try {
-    const hasKey = !!process.env.BREVO_API_KEY;
-    const keyPrefix = hasKey ? process.env.BREVO_API_KEY.substring(0, 8) + '...' : 'NOT SET';
-    const senderEmail = process.env.EMAIL_USER || 'mangalenterprises5225@gmail.com';
-
-    // Quick test: call Brevo account endpoint to verify API key works
-    let apiStatus = 'not tested';
-    if (hasKey) {
-      try {
-        const testRes = await fetch('https://api.brevo.com/v3/account', {
-          headers: { 'api-key': process.env.BREVO_API_KEY }
+    // Test DNS resolution
+    let dnsResult = 'not tested';
+    try {
+      const addr = await new Promise((resolve, reject) => {
+        dns.lookup('smtp.gmail.com', { family: 4 }, (err, address) => {
+          if (err) reject(err); else resolve(address);
         });
-        apiStatus = testRes.ok ? 'SUCCESS — API key valid' : `FAILED — ${testRes.status}`;
-      } catch (err) {
-        apiStatus = `FAILED — ${err.message}`;
-      }
-    }
+      });
+      dnsResult = `IPv4: ${addr}`;
+    } catch (e) { dnsResult = `FAILED: ${e.message}`; }
+
+    let verifyResult = 'not tested';
+    try {
+      await transporter.verify();
+      verifyResult = 'SUCCESS';
+    } catch (e) { verifyResult = `FAILED: ${e.message}`; }
 
     res.json({
-      BREVO_API_KEY_set: hasKey,
-      BREVO_API_KEY_prefix: keyPrefix,
-      SENDER_EMAIL: senderEmail,
-      api_status: apiStatus,
-      method: 'Brevo HTTP API (no SMTP, sends to any email)'
+      EMAIL_USER: process.env.EMAIL_USER || 'NOT SET',
+      EMAIL_PASS_set: !!(process.env.EMAIL_PASS),
+      dns_lookup: dnsResult,
+      transporter: verifyResult,
+      method: 'nodemailer SMTP + forced IPv4 dns.lookup'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -142,18 +144,21 @@ app.post('/api/send-email-otp', async (req, res) => {
       await User.create({ phone, email, name: name || '', otp, otpExpiry, isVerified: false });
     }
 
-    const brevoResult = await sendEmailViaBrevo(
-      email,
-      'Your OTP Code — Mangal Enterprises',
-      `<div style="font-family:sans-serif;max-width:400px;margin:auto;padding:24px;border:1px solid #e0cfb3;border-radius:12px;">
-        <h2 style="color:#4a1e0e">Mangal Enterprises</h2>
-        <p>Your one-time password is:</p>
-        <h1 style="font-size:48px;color:#4a1e0e;letter-spacing:8px">${otp}</h1>
-        <p style="color:#888;font-size:13px">Expires in 5 minutes. Do not share this with anyone.</p>
-      </div>`
-    );
+    await transporter.sendMail({
+      from: `"Mangal Enterprises" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Your OTP Code — Mangal Enterprises',
+      html: `
+        <div style="font-family:sans-serif;max-width:400px;margin:auto;padding:24px;border:1px solid #e0cfb3;border-radius:12px;">
+          <h2 style="color:#4a1e0e">Mangal Enterprises</h2>
+          <p>Your one-time password is:</p>
+          <h1 style="font-size:48px;color:#4a1e0e;letter-spacing:8px">${otp}</h1>
+          <p style="color:#888;font-size:13px">Expires in 5 minutes. Do not share this with anyone.</p>
+        </div>
+      `
+    });
 
-    console.log("✅ OTP email sent to:", email, "| Brevo messageId:", brevoResult.messageId);
+    console.log("✅ OTP email sent to:", email);
     res.json({ success: true });
 
   } catch (error) {

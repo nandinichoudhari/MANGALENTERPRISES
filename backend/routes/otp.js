@@ -1,34 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const nodemailer = require('nodemailer');
 const Otp = require('../models/Otp');
 require('dotenv').config();
 
-// Reusable Brevo email sender (HTTP API — no SMTP needed)
-async function sendEmailViaBrevo(toEmail, subject, htmlContent) {
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'api-key': process.env.BREVO_API_KEY,
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify({
-      sender: {
-        name: 'Mangal Enterprises',
-        email: process.env.EMAIL_USER || 'mangalenterprises5225@gmail.com'
-      },
-      to: [{ email: toEmail }],
-      subject: subject,
-      htmlContent: htmlContent
-    })
-  });
-
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.message || `Brevo API error: ${response.status}`);
-  }
-  return result;
-}
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: { rejectUnauthorized: false },
+  family: 4,
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000
+});
 
 router.post('/send-email-otp', async (req, res) => {
   try {
@@ -46,23 +35,26 @@ router.post('/send-email-otp', async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    // Send email via Brevo HTTP API (works on Render — no SMTP)
-    await sendEmailViaBrevo(
-      email,
-      '🛒 Mangal Enterprises - Email Verification',
-      `<div style="font-family: Arial; max-width: 500px; margin: 0 auto;">
-        <h2>Verify Your Email</h2>
-        <div style="background: linear-gradient(45deg, #28a745, #20c997); 
-                    color: white; padding: 30px; text-align: center; 
-                    font-size: 32px; font-weight: bold; 
-                    letter-spacing: 8px; border-radius: 10px;">
-          ${otp}
+    // Send email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: '🛒 Mangal Enterprises - Email Verification',
+      html: `
+        <div style="font-family: Arial; max-width: 500px; margin: 0 auto;">
+          <h2>Verify Your Email</h2>
+          <div style="background: linear-gradient(45deg, #28a745, #20c997); 
+                      color: white; padding: 30px; text-align: center; 
+                      font-size: 32px; font-weight: bold; 
+                      letter-spacing: 8px; border-radius: 10px;">
+            ${otp}
+          </div>
+          <p style="margin-top: 20px;">This code expires in 5 minutes.</p>
+          <hr>
+          <p><strong>Mangal Enterprises</strong></p>
         </div>
-        <p style="margin-top: 20px;">This code expires in 5 minutes.</p>
-        <hr>
-        <p><strong>Mangal Enterprises</strong></p>
-      </div>`
-    );
+      `
+    });
 
     console.log('📧 OTP sent to:', email);
     res.json({ success: true, message: 'OTP sent successfully!' });
