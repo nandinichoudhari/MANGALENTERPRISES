@@ -50,18 +50,51 @@ app.get('/', (req, res) => {
   });
 });
 
+// Email config diagnostic (temporary — remove after fixing)
+app.get('/check-email', async (req, res) => {
+  try {
+    const hasUser = !!process.env.EMAIL_USER;
+    const hasPass = !!process.env.EMAIL_PASS;
+    const passLength = (process.env.EMAIL_PASS || '').length;
+
+    let verifyResult = 'not tested';
+    try {
+      await transporter.verify();
+      verifyResult = 'SUCCESS — transporter is ready';
+    } catch (err) {
+      verifyResult = `FAILED — ${err.message}`;
+    }
+
+    res.json({
+      EMAIL_USER_set: hasUser,
+      EMAIL_USER_value: hasUser ? process.env.EMAIL_USER : 'NOT SET',
+      EMAIL_PASS_set: hasPass,
+      EMAIL_PASS_length: passLength,
+      transporter_verify: verifyResult
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* ===========================
    EMAIL TRANSPORTER
 =========================== */
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
+
+// Verify transporter on startup
+transporter.verify()
+  .then(() => console.log('✅ Email transporter ready'))
+  .catch(err => console.error('❌ Email transporter ERROR:', err.message));
 
 /* ===========================
    EMAIL OTP SEND
@@ -109,6 +142,7 @@ app.post('/api/send-email-otp', async (req, res) => {
 
   } catch (error) {
     console.error("❌ EMAIL OTP ERROR:", error.message);
+    console.error("❌ FULL ERROR:", error);
     res.status(500).json({ success: false, message: "Failed to send OTP. Check email configuration." });
   }
 });
