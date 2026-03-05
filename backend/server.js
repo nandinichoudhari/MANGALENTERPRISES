@@ -13,7 +13,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const axios = require('axios');
 const User = require('./models/User');
 const jwt = require('jsonwebtoken');
@@ -62,124 +62,60 @@ app.get('/', (req, res) => {
 });
 
 /* ===========================
-   EMAIL SETUP
-   Primary: Brevo HTTP API (works on Render — no SMTP needed)
-   Fallback: Nodemailer Gmail SMTP (works on localhost)
+   EMAIL SETUP — Resend
+   Clean API-based email (no SMTP needed)
 =========================== */
-const USE_BREVO = !!process.env.BREVO_API_KEY;
-let transporter = null;
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@mangalenterprise.com';
 
-if (USE_BREVO) {
-  console.log('✅ Using Brevo API for email delivery');
-} else {
-  transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    },
-    tls: { rejectUnauthorized: false },
-    family: 4,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000
+console.log(`📧 Email configured via Resend (from: ${FROM_EMAIL})`);
+
+// Helper: send email via Resend API
+async function sendEmail({ to, subject, html }) {
+  const { data, error } = await resend.emails.send({
+    from: `Mangal Enterprises <${FROM_EMAIL}>`,
+    to: [to],
+    subject,
+    html
   });
 
-  transporter.verify()
-    .then(() => console.log('✅ Email transporter ready (nodemailer SMTP, IPv4 forced)'))
-    .catch(err => console.error('❌ Email transporter ERROR:', err.message));
-}
-
-// Helper: send email via whichever method is configured
-async function sendEmail({ to, subject, html }) {
-  if (USE_BREVO) {
-    const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
-    const senderName = process.env.BREVO_SENDER_NAME || 'Mangal Enterprises';
-
-    try {
-      const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
-        sender: { name: senderName, email: senderEmail },
-        to: [{ email: to }],
-        subject: subject,
-        htmlContent: html
-      }, {
-        headers: {
-          'api-key': process.env.BREVO_API_KEY,
-          'Content-Type': 'application/json'
-        }
-      });
-      return response.data;
-    } catch (err) {
-      // Brevo returns error details in err.response.data
-      const brevoError = err.response?.data || err.message;
-      console.error('❌ BREVO API ERROR:', JSON.stringify(brevoError));
-      throw new Error(JSON.stringify(brevoError));
-    }
-  } else {
-    return transporter.sendMail({
-      from: `"Mangal Enterprises" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html
-    });
+  if (error) {
+    console.error('❌ Resend error:', error);
+    throw new Error(error.message || 'Failed to send email via Resend');
   }
+
+  console.log('✅ Email sent via Resend, id:', data?.id);
+  return data;
 }
 
 // Diagnostic endpoint
 app.get('/check-email', async (req, res) => {
   try {
-    if (USE_BREVO) {
-      const key = process.env.BREVO_API_KEY || '';
-      const keyPreview = key.length > 12 ? key.substring(0, 8) + '...' + key.substring(key.length - 4) : 'TOO SHORT';
-      res.json({
-        method: 'Brevo HTTP API',
-        BREVO_API_KEY_set: true,
-        key_preview: keyPreview,
-        key_length: key.length,
-        key_starts_with_xkeysib: key.startsWith('xkeysib-'),
-        sender_email: process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER,
-        status: 'ready'
-      });
-    } else {
-      let dnsResult = 'not tested';
-      try {
-        const addr = await new Promise((resolve, reject) => {
-          dns.lookup('smtp.gmail.com', { family: 4 }, (err, address) => {
-            if (err) reject(err); else resolve(address);
-          });
-        });
-        dnsResult = `IPv4: ${addr}`;
-      } catch (e) { dnsResult = `FAILED: ${e.message}`; }
+    const key = process.env.RESEND_API_KEY || '';
+    const keyPreview = key.length > 12
+      ? key.substring(0, 8) + '...' + key.substring(key.length - 4)
+      : 'NOT SET';
 
-      let verifyResult = 'not tested';
-      try {
-        await transporter.verify();
-        verifyResult = 'SUCCESS';
-      } catch (e) { verifyResult = `FAILED: ${e.message}`; }
-
-      res.json({
-        method: 'nodemailer SMTP + forced IPv4',
-        EMAIL_USER: process.env.EMAIL_USER || 'NOT SET',
-        EMAIL_PASS_set: !!(process.env.EMAIL_PASS),
-        dns_lookup: dnsResult,
-        transporter: verifyResult
-      });
-    }
+    res.json({
+      method: 'Resend API',
+      RESEND_API_KEY_set: !!process.env.RESEND_API_KEY,
+      key_preview: keyPreview,
+      from_email: FROM_EMAIL,
+      status: process.env.RESEND_API_KEY ? 'ready' : 'missing API key'
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Test endpoint — send a test email to see if Brevo works
+// Test endpoint — send a test email via Resend
 app.get('/test-email', async (req, res) => {
-  const testTo = req.query.to || process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
+  const testTo = req.query.to || process.env.EMAIL_USER;
   try {
     const result = await sendEmail({
       to: testTo,
       subject: 'Test Email — Mangal Enterprises',
-      html: '<h1>It works!</h1><p>Brevo email is configured correctly.</p>'
+      html: '<h1>It works!</h1><p>Resend email is configured correctly.</p>'
     });
     res.json({ success: true, sentTo: testTo, result });
   } catch (err) {
