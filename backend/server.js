@@ -131,9 +131,14 @@ async function sendEmail({ to, subject, html }) {
 app.get('/check-email', async (req, res) => {
   try {
     if (USE_BREVO) {
+      const key = process.env.BREVO_API_KEY || '';
+      const keyPreview = key.length > 12 ? key.substring(0, 8) + '...' + key.substring(key.length - 4) : 'TOO SHORT';
       res.json({
         method: 'Brevo HTTP API',
         BREVO_API_KEY_set: true,
+        key_preview: keyPreview,
+        key_length: key.length,
+        key_starts_with_xkeysib: key.startsWith('xkeysib-'),
         sender_email: process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER,
         status: 'ready'
       });
