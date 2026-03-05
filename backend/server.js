@@ -50,12 +50,46 @@ app.get('/', (req, res) => {
   });
 });
 
-// Email config diagnostic (temporary — remove after fixing)
+/* ===========================
+   EMAIL TRANSPORTER
+=========================== */
+const dns = require('dns');
+
+// Force ALL DNS resolution in this process to use IPv4
+dns.setDefaultResultOrder('ipv4first');
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,             // use STARTTLS on port 587
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  family: 4,                 // Force IPv4
+  connectionTimeout: 10000,  // 10s to establish connection
+  greetingTimeout: 10000,    // 10s for SMTP greeting
+  socketTimeout: 15000       // 15s for socket operations
+});
+
+// Email config diagnostic endpoint
 app.get('/check-email', async (req, res) => {
   try {
     const hasUser = !!process.env.EMAIL_USER;
     const hasPass = !!process.env.EMAIL_PASS;
     const passLength = (process.env.EMAIL_PASS || '').length;
+
+    // Check DNS resolution
+    let dnsResult = 'not tested';
+    try {
+      const addresses = await dns.promises.resolve4('smtp.gmail.com');
+      dnsResult = `IPv4: ${addresses.join(', ')}`;
+    } catch (err) {
+      dnsResult = `DNS FAILED: ${err.message}`;
+    }
 
     let verifyResult = 'not tested';
     try {
@@ -70,6 +104,7 @@ app.get('/check-email', async (req, res) => {
       EMAIL_USER_value: hasUser ? process.env.EMAIL_USER : 'NOT SET',
       EMAIL_PASS_set: hasPass,
       EMAIL_PASS_length: passLength,
+      dns_resolution: dnsResult,
       transporter_verify: verifyResult
     });
   } catch (err) {
@@ -77,26 +112,7 @@ app.get('/check-email', async (req, res) => {
   }
 });
 
-/* ===========================
-   EMAIL TRANSPORTER
-=========================== */
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,            // use SSL on port 465
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  // Force IPv4 — Render's free-tier doesn't support IPv6 outbound,
-  // which causes "connect ENETUNREACH" when Gmail resolves to IPv6
-  family: 4
-});
-
-// Verify transporter on startup
+// Verify transporter on startup (non-blocking)
 transporter.verify()
   .then(() => console.log('✅ Email transporter ready'))
   .catch(err => console.error('❌ Email transporter ERROR:', err.message));
