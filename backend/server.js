@@ -98,19 +98,25 @@ async function sendEmail({ to, subject, html }) {
     const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
     const senderName = process.env.BREVO_SENDER_NAME || 'Mangal Enterprises';
 
-    const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
-      sender: { name: senderName, email: senderEmail },
-      to: [{ email: to }],
-      subject: subject,
-      htmlContent: html
-    }, {
-      headers: {
-        'api-key': process.env.BREVO_API_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    return response.data;
+    try {
+      const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: html
+      }, {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (err) {
+      // Brevo returns error details in err.response.data
+      const brevoError = err.response?.data || err.message;
+      console.error('❌ BREVO API ERROR:', JSON.stringify(brevoError));
+      throw new Error(JSON.stringify(brevoError));
+    }
   } else {
     return transporter.sendMail({
       from: `"Mangal Enterprises" <${process.env.EMAIL_USER}>`,
@@ -161,6 +167,21 @@ app.get('/check-email', async (req, res) => {
   }
 });
 
+// Test endpoint — send a test email to see if Brevo works
+app.get('/test-email', async (req, res) => {
+  const testTo = req.query.to || process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
+  try {
+    const result = await sendEmail({
+      to: testTo,
+      subject: 'Test Email — Mangal Enterprises',
+      html: '<h1>It works!</h1><p>Brevo email is configured correctly.</p>'
+    });
+    res.json({ success: true, sentTo: testTo, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 /* ===========================
    EMAIL OTP SEND
 =========================== */
@@ -207,8 +228,7 @@ app.post('/api/send-email-otp', async (req, res) => {
 
   } catch (error) {
     console.error("❌ EMAIL OTP ERROR:", error.message);
-    console.error("❌ FULL ERROR:", error);
-    res.status(500).json({ success: false, message: "Failed to send OTP. Check email configuration." });
+    res.status(500).json({ success: false, message: "Failed to send OTP: " + error.message });
   }
 });
 
