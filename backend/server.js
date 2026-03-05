@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const User = require('./models/User');
 const jwt = require('jsonwebtoken');
 
@@ -51,71 +51,29 @@ app.get('/', (req, res) => {
 });
 
 /* ===========================
-   EMAIL TRANSPORTER
+   EMAIL via RESEND (HTTP API)
+   Render blocks SMTP ports 465/587, so we use
+   Resend which sends emails over HTTPS (port 443)
 =========================== */
-const dns = require('dns');
-
-// Force ALL DNS resolution in this process to use IPv4
-dns.setDefaultResultOrder('ipv4first');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,             // use STARTTLS on port 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  family: 4,                 // Force IPv4
-  connectionTimeout: 10000,  // 10s to establish connection
-  greetingTimeout: 10000,    // 10s for SMTP greeting
-  socketTimeout: 15000       // 15s for socket operations
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email config diagnostic endpoint
 app.get('/check-email', async (req, res) => {
   try {
-    const hasUser = !!process.env.EMAIL_USER;
-    const hasPass = !!process.env.EMAIL_PASS;
-    const passLength = (process.env.EMAIL_PASS || '').length;
-
-    // Check DNS resolution
-    let dnsResult = 'not tested';
-    try {
-      const addresses = await dns.promises.resolve4('smtp.gmail.com');
-      dnsResult = `IPv4: ${addresses.join(', ')}`;
-    } catch (err) {
-      dnsResult = `DNS FAILED: ${err.message}`;
-    }
-
-    let verifyResult = 'not tested';
-    try {
-      await transporter.verify();
-      verifyResult = 'SUCCESS — transporter is ready';
-    } catch (err) {
-      verifyResult = `FAILED — ${err.message}`;
-    }
+    const hasKey = !!process.env.RESEND_API_KEY;
+    const keyPrefix = hasKey ? process.env.RESEND_API_KEY.substring(0, 6) + '...' : 'NOT SET';
+    const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
     res.json({
-      EMAIL_USER_set: hasUser,
-      EMAIL_USER_value: hasUser ? process.env.EMAIL_USER : 'NOT SET',
-      EMAIL_PASS_set: hasPass,
-      EMAIL_PASS_length: passLength,
-      dns_resolution: dnsResult,
-      transporter_verify: verifyResult
+      RESEND_API_KEY_set: hasKey,
+      RESEND_API_KEY_prefix: keyPrefix,
+      EMAIL_FROM: fromEmail,
+      method: 'Resend HTTP API (no SMTP needed)'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
-// Verify transporter on startup (non-blocking)
-transporter.verify()
-  .then(() => console.log('✅ Email transporter ready'))
-  .catch(err => console.error('❌ Email transporter ERROR:', err.message));
 
 /* ===========================
    EMAIL OTP SEND
@@ -145,8 +103,8 @@ app.post('/api/send-email-otp', async (req, res) => {
       await User.create({ phone, email, name: name || '', otp, otpExpiry, isVerified: false });
     }
 
-    await transporter.sendMail({
-      from: `"Mangal Enterprises" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'Mangal Enterprises <onboarding@resend.dev>',
       to: email,
       subject: 'Your OTP Code — Mangal Enterprises',
       html: `
