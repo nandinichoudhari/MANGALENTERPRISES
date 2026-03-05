@@ -103,7 +103,7 @@ app.post('/api/send-email-otp', async (req, res) => {
       await User.create({ phone, email, name: name || '', otp, otpExpiry, isVerified: false });
     }
 
-    await resend.emails.send({
+    const { data, error: sendError } = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'Mangal Enterprises <onboarding@resend.dev>',
       to: email,
       subject: 'Your OTP Code — Mangal Enterprises',
@@ -117,6 +117,12 @@ app.post('/api/send-email-otp', async (req, res) => {
       `
     });
 
+    if (sendError) {
+      console.error("❌ RESEND ERROR:", sendError);
+      return res.status(500).json({ success: false, message: sendError.message || "Email send failed" });
+    }
+
+    console.log("✅ OTP email sent to:", email, "| Resend ID:", data?.id);
     res.json({ success: true });
 
   } catch (error) {
@@ -131,11 +137,19 @@ app.post('/api/send-email-otp', async (req, res) => {
 =========================== */
 app.post('/api/verify-email-otp', async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    const { phone, email, otp } = req.body;
 
-    const user = await User.findOne({ phone });
+    console.log('🔍 VERIFY REQUEST:', { phone, email, otp });
 
-    if (!user) return res.json({ success: false, message: "User not found" });
+    // Find user by phone OR email (same logic as send endpoint)
+    const user = await User.findOne({ $or: [{ phone }, { email }] });
+
+    if (!user) {
+      console.log('❌ No user found for phone:', phone, 'or email:', email);
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    console.log('🔍 Found user, stored OTP:', user.otp, '| received OTP:', otp);
 
     if (String(user.otp) !== String(otp))
       return res.json({ success: false, message: "Invalid OTP" });
