@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const { Resend } = require('resend');
+// Email is sent via Brevo HTTP API (fetch) — no SMTP, no extra package
 const User = require('./models/User');
 const jwt = require('jsonwebtoken');
 
@@ -51,24 +51,63 @@ app.get('/', (req, res) => {
 });
 
 /* ===========================
-   EMAIL via RESEND (HTTP API)
+   EMAIL via BREVO HTTP API
    Render blocks SMTP ports 465/587, so we use
-   Resend which sends emails over HTTPS (port 443)
+   Brevo which sends emails over HTTPS (port 443).
+   Free plan: 300 emails/day to ANY recipient.
 =========================== */
-const resend = new Resend(process.env.RESEND_API_KEY);
+async function sendEmailViaBrevo(toEmail, subject, htmlContent) {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      sender: {
+        name: 'Mangal Enterprises',
+        email: process.env.EMAIL_USER || 'mangalenterprises5225@gmail.com'
+      },
+      to: [{ email: toEmail }],
+      subject: subject,
+      htmlContent: htmlContent
+    })
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.message || `Brevo API error: ${response.status}`);
+  }
+  return result;
+}
 
 // Email config diagnostic endpoint
 app.get('/check-email', async (req, res) => {
   try {
-    const hasKey = !!process.env.RESEND_API_KEY;
-    const keyPrefix = hasKey ? process.env.RESEND_API_KEY.substring(0, 6) + '...' : 'NOT SET';
-    const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+    const hasKey = !!process.env.BREVO_API_KEY;
+    const keyPrefix = hasKey ? process.env.BREVO_API_KEY.substring(0, 8) + '...' : 'NOT SET';
+    const senderEmail = process.env.EMAIL_USER || 'mangalenterprises5225@gmail.com';
+
+    // Quick test: call Brevo account endpoint to verify API key works
+    let apiStatus = 'not tested';
+    if (hasKey) {
+      try {
+        const testRes = await fetch('https://api.brevo.com/v3/account', {
+          headers: { 'api-key': process.env.BREVO_API_KEY }
+        });
+        apiStatus = testRes.ok ? 'SUCCESS — API key valid' : `FAILED — ${testRes.status}`;
+      } catch (err) {
+        apiStatus = `FAILED — ${err.message}`;
+      }
+    }
 
     res.json({
-      RESEND_API_KEY_set: hasKey,
-      RESEND_API_KEY_prefix: keyPrefix,
-      EMAIL_FROM: fromEmail,
-      method: 'Resend HTTP API (no SMTP needed)'
+      BREVO_API_KEY_set: hasKey,
+      BREVO_API_KEY_prefix: keyPrefix,
+      SENDER_EMAIL: senderEmail,
+      api_status: apiStatus,
+      method: 'Brevo HTTP API (no SMTP, sends to any email)'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -103,26 +142,18 @@ app.post('/api/send-email-otp', async (req, res) => {
       await User.create({ phone, email, name: name || '', otp, otpExpiry, isVerified: false });
     }
 
-    const { data, error: sendError } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'Mangal Enterprises <onboarding@resend.dev>',
-      to: email,
-      subject: 'Your OTP Code — Mangal Enterprises',
-      html: `
-        <div style="font-family:sans-serif;max-width:400px;margin:auto;padding:24px;border:1px solid #e0cfb3;border-radius:12px;">
-          <h2 style="color:#4a1e0e">Mangal Enterprises</h2>
-          <p>Your one-time password is:</p>
-          <h1 style="font-size:48px;color:#4a1e0e;letter-spacing:8px">${otp}</h1>
-          <p style="color:#888;font-size:13px">Expires in 5 minutes. Do not share this with anyone.</p>
-        </div>
-      `
-    });
+    const brevoResult = await sendEmailViaBrevo(
+      email,
+      'Your OTP Code — Mangal Enterprises',
+      `<div style="font-family:sans-serif;max-width:400px;margin:auto;padding:24px;border:1px solid #e0cfb3;border-radius:12px;">
+        <h2 style="color:#4a1e0e">Mangal Enterprises</h2>
+        <p>Your one-time password is:</p>
+        <h1 style="font-size:48px;color:#4a1e0e;letter-spacing:8px">${otp}</h1>
+        <p style="color:#888;font-size:13px">Expires in 5 minutes. Do not share this with anyone.</p>
+      </div>`
+    );
 
-    if (sendError) {
-      console.error("❌ RESEND ERROR:", sendError);
-      return res.status(500).json({ success: false, message: sendError.message || "Email send failed" });
-    }
-
-    console.log("✅ OTP email sent to:", email, "| Resend ID:", data?.id);
+    console.log("✅ OTP email sent to:", email, "| Brevo messageId:", brevoResult.messageId);
     res.json({ success: true });
 
   } catch (error) {
