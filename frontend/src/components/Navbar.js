@@ -7,10 +7,26 @@ const Navbar = ({ cartCount }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
-  const [currentUserName, setCurrentUserName] = useState("User");  // ✅ NEW STATE
+  const [currentUserName, setCurrentUserName] = useState("User");
+  const [showBottomNav, setShowBottomNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
+
+  // Handle scroll to hide/show bottom nav
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY && window.scrollY > 50) {
+        setShowBottomNav(false);
+      } else {
+        setShowBottomNav(true);
+      }
+      setLastScrollY(window.scrollY);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   useEffect(() => {
     const savedProducts = localStorage.getItem('menuProducts');
@@ -137,6 +153,36 @@ const Navbar = ({ cartCount }) => {
             Call
           </a>
         </div>
+      </div>
+
+      {/* 🔥 MOBILE BOTTOM NAV (Blinkit/Zepto Style) */}
+      <div className={`mobile-bottom-nav ${showBottomNav ? 'visible' : 'hidden'}`}>
+        <Link to="/" className="bottom-nav-item">
+          <span>🏠</span>
+          Home
+        </Link>
+        <Link to="/menu" className="bottom-nav-item">
+          <span>🍱</span>
+          Menu
+        </Link>
+        <Link to="/cart" className="bottom-nav-item">
+          <div style={{position: 'relative'}}>
+            <span>🛒</span>
+            {cartCount > 0 && <div className="bottom-cart-badge">{cartCount}</div>}
+          </div>
+          Cart
+        </Link>
+        {isLoggedIn ? (
+          <Link to="/user" className="bottom-nav-item">
+            <span>👤</span>
+            Profile
+          </Link>
+        ) : (
+          <Link to="/login" className="bottom-nav-item">
+            <span>🔑</span>
+            Login
+          </Link>
+        )}
       </div>
     </>
   );
