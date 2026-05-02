@@ -95,7 +95,6 @@ function User() {
   return (
     <div style={S.page}>
       <div style={S.container}>
-        <InstallPWA />
 
         {/* ── PROFILE CARD ── */}
         <div style={S.profileCard}>
