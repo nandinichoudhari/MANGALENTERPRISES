@@ -79,8 +79,15 @@ function Cart({ items, setItems }) {
 
           return (
             <div key={item.id} className="cart-item-row">
-              <div className="cart-item-image">
-                <span>{item.emoji || '🍽️'}</span>
+              <div 
+                className="cart-item-image" 
+                style={{ 
+                  backgroundImage: item.image ? `url(${process.env.PUBLIC_URL}${item.image})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                {!item.image && <span>🍽️</span>}
               </div>
               <div className="cart-item-details">
                 <h3 className="cart-item-name">{item.name}</h3>
