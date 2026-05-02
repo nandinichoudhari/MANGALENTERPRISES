@@ -11,7 +11,7 @@ function Contact() {
         <div className="delivery-partners" style={{ marginTop: '24px' }}>
           <p style={{ width: '100%', fontWeight: '700', fontSize: '16px', marginBottom: '12px' }}>Also order online via:</p>
           <a href="https://www.swiggy.com/direct/brand/370609?source=swiggy-direct&subSource=generic" className="btn-swiggy" target="_blank" rel="noopener noreferrer">Swiggy</a>
-          <a href="#" className="btn-zomato" target="_blank" rel="noopener noreferrer">Zomato</a>
+          <a href="https://zomato.onelink.me/xqzv/9t209xqk" className="btn-zomato" target="_blank" rel="noopener noreferrer">Zomato</a>
         </div>
       </div>
     </>
