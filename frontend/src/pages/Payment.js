@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from '../api';
+import { FiMapPin, FiCreditCard, FiDollarSign, FiShield, FiArrowRight } from "react-icons/fi";
 
 function Payment() {
   const navigate = useNavigate();
@@ -252,7 +253,7 @@ function Payment() {
       </div>
 
       <div className="order-info">
-        <h3>Delivery Details</h3>
+        <h3 style={{display: 'flex', alignItems: 'center', gap: '8px'}}><FiMapPin size={18} color="#ea580c" /> Delivery Details</h3>
         <div className="address-summary">
           <p><strong>{address.name || "Customer Name"}</strong></p>
           <p>{address.address1 || "..."}, {address.address2 || ""}</p>
@@ -294,7 +295,7 @@ function Payment() {
       </div>
 
       <div className="payment-options">
-        <h3>Choose Payment Method</h3>
+        <h3 style={{display: 'flex', alignItems: 'center', gap: '8px'}}><FiCreditCard size={18} color="#ea580c" /> Choose Payment Method</h3>
         <div className="payment-methods">
           <label className={`payment-method ${paymentMethod === 'cod' ? 'active' : ''}`}>
             <input
@@ -304,7 +305,7 @@ function Payment() {
               checked={paymentMethod === 'cod'}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            <div className="payment-icon">COD</div>
+            <div className="payment-icon"><FiDollarSign size={24} /></div>
             <div>
               <h4>Cash on Delivery</h4>
               <p>Pay when delivery boy arrives</p>
@@ -319,7 +320,7 @@ function Payment() {
               checked={paymentMethod === 'razorpay'}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            <div className="payment-icon">UPI</div>
+            <div className="payment-icon"><FiCreditCard size={24} /></div>
             <div>
               <h4>Pay Online</h4>
               <p>Card / UPI / Netbanking — Razorpay Secure</p>
@@ -346,13 +347,13 @@ function Payment() {
           {loading
             ? 'Processing...'
             : paymentMethod === 'cod'
-              ? `Place Order (COD) — ₹${total}`
-              : `Pay ₹${total} with Razorpay`}
+              ? <><span>Place Order (COD) — ₹{total}</span> <FiArrowRight size={16} /></>
+              : <><span>Pay ₹{total} with Razorpay</span> <FiArrowRight size={16} /></>}
         </button>
       </div>
 
       <div className="secure-payment">
-        <p>Secure checkout · 100% Safe · Mumbai Same Day Delivery</p>
+        <p style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'}}><FiShield size={14} /> Secure checkout · 100% Safe · Mumbai Same Day Delivery</p>
       </div>
     </div>
   );

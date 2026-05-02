@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FiMapPin, FiNavigation, FiCheckCircle, FiRefreshCw, FiShoppingBag, FiAlertCircle, FiArrowRight } from "react-icons/fi";
 
 // Dombivli East coordinates
 const BASE_LAT = 19.2183;
@@ -40,7 +41,7 @@ function Cart({ items, setItems }) {
     return (
       <div className="cart-page">
         <div className="empty-cart">
-          <div className="empty-icon">🛒</div>
+          <div className="empty-icon"><FiShoppingBag size={64} color="#e0cfb3" /></div>
           <h2 className="page-title">Your Cart is Empty</h2>
           <p className="empty-text">Add delicious items from the menu!</p>
           <Link to="/menu" className="cta-btn">Shop Now</Link>
@@ -170,7 +171,7 @@ function Cart({ items, setItems }) {
       {/* Delivery Location Detection */}
       <div className="cart-summary" style={{ marginBottom: '16px' }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontWeight: '700', marginBottom: '12px', fontSize: '16px' }}>Delivery Location</p>
+          <p style={{ fontWeight: '700', marginBottom: '12px', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><FiMapPin size={18} /> Delivery Location</p>
 
           {deliveryCharge === null ? (
             <>
@@ -190,14 +191,14 @@ function Cart({ items, setItems }) {
                   transition: 'all 0.2s'
                 }}
               >
-                {locating ? 'Detecting...' : 'Detect My Location'}
+                {locating ? <><FiNavigation size={14} style={{animation: 'spin 1s linear infinite'}} /> Detecting...</> : <><FiNavigation size={14} /> Detect My Location</>}
               </button>
               <p style={{ color: '#888', fontSize: '13px', marginTop: '8px' }}>
                 We need your location to calculate delivery charges
               </p>
               {locError && (
                 <p style={{ color: '#e23744', fontSize: '14px', marginTop: '8px', fontWeight: '600' }}>
-                  ⚠️ {locError}
+                   <FiAlertCircle size={14} style={{marginRight: '4px', verticalAlign: 'middle'}} /> {locError}
                 </p>
               )}
             </>
@@ -209,7 +210,7 @@ function Cart({ items, setItems }) {
               border: '1px solid #c8e6c9'
             }}>
               <p style={{ color: '#2e7d32', fontWeight: '700', fontSize: '15px' }}>
-                ✅ Location detected!
+                <FiCheckCircle size={16} style={{marginRight: '6px', verticalAlign: 'middle'}} /> Location detected!
               </p>
               <p style={{ color: '#555', fontSize: '14px', marginTop: '4px' }}>
                 You are ~{distance} km from Dombivli East
@@ -228,7 +229,7 @@ function Cart({ items, setItems }) {
                   cursor: 'pointer'
                 }}
               >
-                Re-detect
+                <FiRefreshCw size={12} style={{marginRight: '4px'}} /> Re-detect
               </button>
             </div>
           )}
@@ -259,7 +260,7 @@ function Cart({ items, setItems }) {
 
       <div className="cart-actions">
         <button className="checkout-btn" onClick={handleCheckout}>
-          Place Order Now — ₹{deliveryCharge !== null ? finalTotal : subtotal}
+          Place Order Now — ₹{deliveryCharge !== null ? finalTotal : subtotal} <FiArrowRight size={16} style={{marginLeft: '6px', verticalAlign: 'middle'}} />
         </button>
       </div>
     </div>
