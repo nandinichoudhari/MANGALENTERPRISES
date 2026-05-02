@@ -1,6 +1,6 @@
 import "./Navbar.css";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { FiShoppingBag, FiPhone, FiSearch, FiX, FiUser, FiHome, FiGrid, FiLogIn } from "react-icons/fi";
+import { FiShoppingBag, FiPhone, FiSearch, FiX, FiUser, FiHome, FiGrid, FiLogIn, FiInfo } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import { PRODUCTS } from "../pages/Menu";
 
@@ -156,6 +156,10 @@ const Navbar = ({ cartCount }) => {
         <NavLink replace to="/menu" className="bottom-nav-item">
           <FiGrid size={20} />
           Menu
+        </NavLink>
+        <NavLink replace to="/about" className="bottom-nav-item">
+          <FiInfo size={20} />
+          About
         </NavLink>
         <NavLink replace to="/cart" className="bottom-nav-item">
           <div style={{position: 'relative'}}>

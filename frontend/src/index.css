@@ -1090,6 +1090,47 @@ a {
     padding: 1rem;
     margin-bottom: 1rem;
   }
+
+  /* 🍟 MODERNS TABS (CHIPS) */
+  .menu-tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding: 15px 20px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .menu-tabs::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 8px 20px;
+    border-radius: 99px;
+    background: #f8f1e7;
+    border: 1px solid #eee;
+    color: #6b2f1a;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .tab-btn.active {
+    background: #ea580c;
+    color: #fff;
+    border-color: #ea580c;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+    transform: scale(1.05);
+  }
+
+  .tab-btn svg {
+    margin-right: 6px;
+    font-size: 16px;
+  }
 }
 
 /* SEARCH DROPDOWN MOBILE */
@@ -3260,6 +3301,21 @@ a {
   .timeline-item,
   .tl-right { flex-direction: column; align-items: flex-start; padding-left: 72px; }
   .tl-media-img, .tl-media-video { height: 160px; }
+
+  /* ABOUT PAGE MOBILE OPTIMIZATION */
+  .about-main-title { font-size: 24px !important; }
+  .about-tagline { font-size: 14px !important; }
+  .achieve-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+  .achieve-card { padding: 20px 10px !important; }
+  .achieve-num { font-size: 24px !important; }
+  .media-grid { grid-template-columns: 1fr !important; }
+  .media-card { height: 200px !important; }
+  .story-journey-header .section-title { font-size: 24px !important; }
+  .story-chapter { padding: 20px !important; }
+  .chapter-year { font-size: 22px !important; }
+  .chapter-title { font-size: 18px !important; }
+  .chapter-desc { font-size: 14px !important; }
+  .about-cta h2 { font-size: 24px !important; }
 }
 
 /* ── About: clean header (no bg) ── */

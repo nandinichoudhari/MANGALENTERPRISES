@@ -281,6 +281,25 @@ function User() {
           )}
         </div>
 
+        {/* ── HELP & SUPPORT ── */}
+        <div style={S.section}>
+          <div style={S.sectionHead}>
+            <h3 style={S.sectionTitle}>Help & Support</h3>
+            <FiPhone size={18} color="#8B4513" />
+          </div>
+          <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ fontSize: 13, color: '#8B7355', margin: 0 }}>Need help with an order? Contact us directly.</p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <a href="https://wa.me/919892512137" target="_blank" rel="noopener noreferrer" style={{ ...S.btnOutline, flex: 1, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+                <FiMessageSquare size={16} /> WhatsApp
+              </a>
+              <a href="tel:+919892512137" style={{ ...S.btnPrimary, flex: 1, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+                <FiPhone size={16} /> Call Us
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* ── LOGOUT ── */}
         <button onClick={() => {
           ['loggedIn', 'phone', 'userName', 'userEmail', 'currentUserName', 'currentUserEmail',
