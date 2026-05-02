@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const PRODUCTS = [
+export const PRODUCTS = [
   // NAMKIN
   { id: 1, name: "Bhajni Chakli", price: 650, unit: "1 KG", section: "NAMKIN", image: "/products/chakli.jpeg" },
   { id: 2, name: "Pohe Chivda", price: 450, unit: "1 KG", section: "NAMKIN", image: "/products/pohe.jpeg" },

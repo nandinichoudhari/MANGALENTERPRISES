@@ -2,6 +2,7 @@ import "./Navbar.css";
 import { Link, useNavigate } from "react-router-dom";
 import { FiShoppingBag, FiPhone, FiSearch, FiX, FiUser } from "react-icons/fi";
 import { useState, useEffect } from "react";
+import { PRODUCTS } from "../pages/Menu";
 
 const Navbar = ({ cartCount }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,8 +12,6 @@ const Navbar = ({ cartCount }) => {
   const [showBottomNav, setShowBottomNav] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const navigate = useNavigate();
-
-  const [products, setProducts] = useState([]);
 
   // Handle scroll to hide/show bottom nav
   useEffect(() => {
@@ -28,13 +27,6 @@ const Navbar = ({ cartCount }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  useEffect(() => {
-    const savedProducts = localStorage.getItem('menuProducts');
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    }
-  }, []);
-
   // ✅ NEW: Load user name on mount
   useEffect(() => {
     // login.js saves 'userName', EmailLogin.js saves 'currentUserName'
@@ -48,12 +40,12 @@ const Navbar = ({ cartCount }) => {
       setShowResults(false);
       return;
     }
-    const results = products.filter(product =>
+    const results = PRODUCTS.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase())
     ).slice(0, 5);
     setSearchResults(results);
     setShowResults(true);
-  }, [searchTerm, products]);
+  }, [searchTerm]);
 
   const handleSearchSelect = (item) => {
     setSearchTerm(item.name);
