@@ -191,39 +191,62 @@
 
 /* Mobile */
 @media (max-width: 768px) {
+  .logo-space {
+    padding: 10px 0 5px;
+  }
+  .logo-img {
+    width: 80px;
+  }
+  .brand-name {
+    font-size: 22px;
+  }
   .navbar {
     flex-direction: column;
-    gap: 16px;
-    padding: 12px;
-  }
-  
-  .search-container {
-    order: 3;
-    flex-basis: 100%;
-    margin: 12px 0;
-    max-width: none;
-  }
-  
-  .nav-left {
-    order: 2;
-    flex-wrap: wrap;
-    justify-content: center;
     gap: 12px;
+    padding: 16px;
+    border-radius: 16px;
+    margin: 0 10px 10px;
   }
-  
+  .nav-left, .nav-right {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .search-container {
+    order: -1;
+    width: 100%;
+    margin: 0;
+    max-width: 100%;
+  }
   .search-input {
-    padding: 14px 16px 14px 48px;
+    padding: 12px 16px 12px 42px;
+    font-size: 14px;
+  }
+  .nav-link {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 16px !important;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .cart-pill, .nav-phone-link {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 10px 16px !important;
   }
 }
+
 .nav-left {
   display: flex;
-  align-items: center !important;  /* 👈 FORCE CENTER */
+  align-items: center !important;
   gap: 20px;
 }
 
 .nav-link {
   display: flex;
-  align-items: center !important;  /* 👈 FORCE CENTER */
+  align-items: center !important;
   padding: 8px 12px;
   line-height: 1.2;
 }
