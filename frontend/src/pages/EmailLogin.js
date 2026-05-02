@@ -87,7 +87,7 @@ function EmailLogin() {
 
   return (
     <div className="login-page">
-      <div className="login-card">
+      <div className="login-container">
         <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}><FiMail color="#ea580c" /> Email Login</h2>
 
         {step === 1 ? (
