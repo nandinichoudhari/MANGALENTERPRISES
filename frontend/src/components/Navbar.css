@@ -206,7 +206,15 @@
     background: transparent;
     margin: 0;
   }
-  .nav-left, .nav-right {
+  .nav-right {
+    display: none !important;
+  }
+  .nav-left {
+    display: flex !important;
+    width: 100%;
+    margin: 0;
+  }
+  .nav-left .nav-link {
     display: none !important;
   }
   .search-container {
