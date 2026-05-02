@@ -28,6 +28,10 @@ function Layout({ children, cartCount, addToCart, cartItems, setCartItems }) {
       <main className="page-content">{children}</main>
       {!hideNavbar && (
         <footer className="site-footer">
+          <div className="delivery-partners" style={{ marginBottom: '16px' }}>
+            <a href="https://www.swiggy.com/direct/brand/370609?source=swiggy-direct&subSource=generic" className="btn-swiggy" target="_blank" rel="noopener noreferrer">Swiggy</a>
+            <a href="#" className="btn-zomato" target="_blank" rel="noopener noreferrer">Zomato</a>
+          </div>
           © {new Date().getFullYear()} Mangal Enterprises – Authentic Maharashtrian Food
         </footer>
       )}
