@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiUrl } from '../api';
-import { FiCheck, FiLoader, FiTruck, FiStar, FiUser, FiPackage, FiMapPin, FiLogOut, FiEdit3, FiShoppingBag, FiCreditCard, FiPhone, FiMessageSquare } from "react-icons/fi";
+import { FiCheck, FiLoader, FiTruck, FiStar, FiPackage, FiMapPin, FiLogOut, FiEdit3, FiShoppingBag, FiCreditCard, FiPhone, FiMessageSquare } from "react-icons/fi";
 
 const STEPS = [
   { key: 'confirmed', label: 'Order Confirmed', icon: <FiCheck /> },
