@@ -170,7 +170,7 @@ function Cart({ items, setItems }) {
       {/* Delivery Location Detection */}
       <div className="cart-summary" style={{ marginBottom: '16px' }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontWeight: '700', marginBottom: '12px', fontSize: '16px' }}>📍 Delivery Location</p>
+          <p style={{ fontWeight: '700', marginBottom: '12px', fontSize: '16px' }}>Delivery Location</p>
 
           {deliveryCharge === null ? (
             <>
@@ -190,7 +190,7 @@ function Cart({ items, setItems }) {
                   transition: 'all 0.2s'
                 }}
               >
-                {locating ? '📡 Detecting...' : '📍 Detect My Location'}
+                {locating ? 'Detecting...' : 'Detect My Location'}
               </button>
               <p style={{ color: '#888', fontSize: '13px', marginTop: '8px' }}>
                 We need your location to calculate delivery charges
@@ -228,7 +228,7 @@ function Cart({ items, setItems }) {
                   cursor: 'pointer'
                 }}
               >
-                🔄 Re-detect
+                Re-detect
               </button>
             </div>
           )}
@@ -259,7 +259,7 @@ function Cart({ items, setItems }) {
 
       <div className="cart-actions">
         <button className="checkout-btn" onClick={handleCheckout}>
-          🧾 Place Order Now ₹{deliveryCharge !== null ? finalTotal : subtotal}
+          Place Order Now — ₹{deliveryCharge !== null ? finalTotal : subtotal}
         </button>
       </div>
     </div>

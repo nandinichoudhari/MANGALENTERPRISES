@@ -252,11 +252,11 @@ function Payment() {
       </div>
 
       <div className="order-info">
-        <h3>📍 Delivery Details</h3>
+        <h3>Delivery Details</h3>
         <div className="address-summary">
           <p><strong>{address.name || "Customer Name"}</strong></p>
           <p>{address.address1 || "..."}, {address.address2 || ""}</p>
-          <p>{address.city || "Mumbai"} | 📞 {address.phone || "Phone"}</p>
+          <p>{address.city || "Mumbai"} | {address.phone || "Phone"}</p>
         </div>
       </div>
 
@@ -294,7 +294,7 @@ function Payment() {
       </div>
 
       <div className="payment-options">
-        <h3>💳 Choose Payment Method</h3>
+        <h3>Choose Payment Method</h3>
         <div className="payment-methods">
           <label className={`payment-method ${paymentMethod === 'cod' ? 'active' : ''}`}>
             <input
@@ -304,7 +304,7 @@ function Payment() {
               checked={paymentMethod === 'cod'}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            <div className="payment-icon">💰</div>
+            <div className="payment-icon">COD</div>
             <div>
               <h4>Cash on Delivery</h4>
               <p>Pay when delivery boy arrives</p>
@@ -319,7 +319,7 @@ function Payment() {
               checked={paymentMethod === 'razorpay'}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            <div className="payment-icon">💳</div>
+            <div className="payment-icon">UPI</div>
             <div>
               <h4>Pay Online</h4>
               <p>Card / UPI / Netbanking — Razorpay Secure</p>
@@ -346,13 +346,13 @@ function Payment() {
           {loading
             ? 'Processing...'
             : paymentMethod === 'cod'
-              ? `✅ Place Order (COD) — ₹${total}`
-              : `💳 Pay ₹${total} with Razorpay`}
+              ? `Place Order (COD) — ₹${total}`
+              : `Pay ₹${total} with Razorpay`}
         </button>
       </div>
 
       <div className="secure-payment">
-        <p>🔒 Secure checkout | 100% Safe | Mumbai Same Day Delivery</p>
+        <p>Secure checkout · 100% Safe · Mumbai Same Day Delivery</p>
       </div>
     </div>
   );

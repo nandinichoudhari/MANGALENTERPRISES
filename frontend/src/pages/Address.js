@@ -176,7 +176,7 @@ function Address() {
           boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
           border: '1px solid #eee'
         }}>
-          <h2 style={{ marginBottom: '10px', color: '#333' }}>📍 Delivery Address</h2>
+          <h2 style={{ marginBottom: '10px', color: '#333' }}>Delivery Address</h2>
           <p style={{ color: '#666', marginBottom: '30px' }}>
             {loadingAddresses
               ? 'Loading your addresses...'
@@ -229,7 +229,7 @@ function Address() {
               cursor: selectedAddress ? 'pointer' : 'not-allowed'
             }}
           >
-            {selectedAddress ? '🚚 Continue to Payment' : 'Select Address First'}
+            {selectedAddress ? 'Continue to Payment' : 'Select Address First'}
           </button>
 
           <button
@@ -242,7 +242,7 @@ function Address() {
               fontSize: '16px'
             }}
           >
-            ➕ {savedAddresses.length > 0 ? 'Add New Address' : 'Add Address'}
+            + {savedAddresses.length > 0 ? 'Add New Address' : 'Add Address'}
           </button>
         </div>
 

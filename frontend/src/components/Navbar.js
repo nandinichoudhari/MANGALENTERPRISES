@@ -1,6 +1,6 @@
 import "./Navbar.css";
 import { Link, useNavigate } from "react-router-dom";
-import { FiShoppingBag, FiPhone, FiSearch, FiX, FiUser } from "react-icons/fi";
+import { FiShoppingBag, FiPhone, FiSearch, FiX, FiUser, FiHome, FiGrid, FiLogIn } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import { PRODUCTS } from "../pages/Menu";
 
@@ -150,28 +150,28 @@ const Navbar = ({ cartCount }) => {
       {/* 🔥 MOBILE BOTTOM NAV (Blinkit/Zepto Style) */}
       <div className={`mobile-bottom-nav ${showBottomNav ? 'visible' : 'hidden'}`}>
         <Link to="/" className="bottom-nav-item">
-          <span>🏠</span>
+          <FiHome size={20} />
           Home
         </Link>
         <Link replace to="/menu" className="bottom-nav-item">
-          <span>🍱</span>
+          <FiGrid size={20} />
           Menu
         </Link>
         <Link replace to="/cart" className="bottom-nav-item">
           <div style={{position: 'relative'}}>
-            <span>🛒</span>
+            <FiShoppingBag size={20} />
             {cartCount > 0 && <div className="bottom-cart-badge">{cartCount}</div>}
           </div>
           Cart
         </Link>
         {isLoggedIn ? (
           <Link replace to="/user" className="bottom-nav-item">
-            <span>👤</span>
+            <FiUser size={20} />
             Profile
           </Link>
         ) : (
           <Link replace to="/login" className="bottom-nav-item">
-            <span>🔑</span>
+            <FiLogIn size={20} />
             Login
           </Link>
         )}
