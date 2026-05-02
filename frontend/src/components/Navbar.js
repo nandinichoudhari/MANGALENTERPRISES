@@ -132,7 +132,7 @@ const Navbar = ({ cartCount }) => {
             <Link to="/login" className="nav-link">Login</Link>
           )}
 
-          <a href="tel:9876543210" className="nav-phone-link">
+          <a href="tel:9892512137" className="nav-phone-link">
             <FiPhone size={18} />
             Call
           </a>
