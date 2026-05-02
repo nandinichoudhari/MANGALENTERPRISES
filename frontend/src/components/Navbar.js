@@ -149,31 +149,31 @@ const Navbar = ({ cartCount }) => {
 
       {/* 🔥 MOBILE BOTTOM NAV (Blinkit/Zepto Style) */}
       <div className={`mobile-bottom-nav ${showBottomNav ? 'visible' : 'hidden'}`}>
-        <Link to="/" className="bottom-nav-item">
+        <NavLink to="/" end className="bottom-nav-item">
           <FiHome size={20} />
           Home
-        </Link>
-        <Link replace to="/menu" className="bottom-nav-item">
+        </NavLink>
+        <NavLink replace to="/menu" className="bottom-nav-item">
           <FiGrid size={20} />
           Menu
-        </Link>
-        <Link replace to="/cart" className="bottom-nav-item">
+        </NavLink>
+        <NavLink replace to="/cart" className="bottom-nav-item">
           <div style={{position: 'relative'}}>
             <FiShoppingBag size={20} />
             {cartCount > 0 && <div className="bottom-cart-badge">{cartCount}</div>}
           </div>
           Cart
-        </Link>
+        </NavLink>
         {isLoggedIn ? (
-          <Link replace to="/user" className="bottom-nav-item">
+          <NavLink replace to="/user" className="bottom-nav-item">
             <FiUser size={20} />
             Profile
-          </Link>
+          </NavLink>
         ) : (
-          <Link replace to="/login" className="bottom-nav-item">
+          <NavLink replace to="/login" className="bottom-nav-item">
             <FiLogIn size={20} />
             Login
-          </Link>
+          </NavLink>
         )}
       </div>
     </>

@@ -43,12 +43,12 @@ function Home() {
   ];
 
   const FEATURES = [
-    { title: "Made at Home", desc: "Lovingly prepared in our home kitchen. No factory processes, no shortcuts." },
-    { title: "No Preservatives", desc: "100% natural ingredients. No artificial colours, flavours, or chemicals added." },
-    { title: "Fresh Every Day", desc: "Prepared fresh every morning. We never sell stale or day-old products." },
-    { title: "Authentic Recipes", desc: "Traditional Maharashtrian recipes passed down across three generations." },
-    { title: "Mumbai Delivery", desc: "Same-day delivery across Mumbai. Order before 10 AM for today's batch." },
-    { title: "Fair Pricing", desc: "Quality food at honest prices. No markups — just home-cooked goodness." },
+    { title: "Made at Home", icon: <FiHome />, desc: "Lovingly prepared in our home kitchen. No factory processes, no shortcuts." },
+    { title: "No Preservatives", icon: <FiShield />, desc: "100% natural ingredients. No artificial colours, flavours, or chemicals added." },
+    { title: "Fresh Every Day", icon: <FiClock />, desc: "Prepared fresh every morning. We never sell stale or day-old products." },
+    { title: "Authentic Recipes", icon: <FiHeart />, desc: "Traditional Maharashtrian recipes passed down across three generations." },
+    { title: "Mumbai Delivery", icon: <FiTruck />, desc: "Same-day delivery across Mumbai. Order before 10 AM for today's batch." },
+    { title: "Fair Pricing", icon: <FiTag />, desc: "Quality food at honest prices. No markups — just home-cooked goodness." },
   ];
 
   const STEPS = [
@@ -99,7 +99,7 @@ function Home() {
             style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/products/puranpoli.jpeg)` }}
           />
           <div className="hero-floating-badge">
-            <span>🌟</span>
+            <FiStar size={24} color="#f97316" />
             <div>100% Homemade<br/>Maharashtrian</div>
           </div>
         </div>
@@ -143,8 +143,11 @@ function Home() {
       <section className="section">
         <h2 className="section-title">Why Families Choose Us</h2>
         <div className="feature-grid">
-          {FEATURES.map(({ title, desc }) => (
+          {FEATURES.map(({ title, icon, desc }) => (
             <div key={title} className="feature-card card">
+              <div className="feature-icon-wrapper" style={{ fontSize: '24px', color: '#ea580c', marginBottom: '12px' }}>
+                {icon}
+              </div>
               <h4 className="feature-title">{title}</h4>
               <p className="feature-desc">{desc}</p>
             </div>

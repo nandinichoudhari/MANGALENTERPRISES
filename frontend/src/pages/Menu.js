@@ -113,7 +113,9 @@ function Menu({ addToCart }) {
               key={tab}
               className={`tab-btn ${activeTab === tab ? "active" : ""}`}
               onClick={() => updateActiveTab(tab)}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
+              {TAB_ICONS[tab]}
               {tab}
             </button>
           ))}
@@ -185,7 +187,9 @@ function Menu({ addToCart }) {
       )}
 
       <div className="text-box">
-        <p><strong>📞 Contact:</strong> <a href="https://wa.me/919892512137" target="_blank" rel="noopener noreferrer">98925 12137</a> | WhatsApp for bulk orders</p>
+        <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <FiPhone size={16} color="#ea580c" /> <strong>Contact:</strong> <a href="https://wa.me/919892512137" target="_blank" rel="noopener noreferrer">98925 12137</a> | WhatsApp for bulk orders
+        </p>
       </div>
     </>
   );

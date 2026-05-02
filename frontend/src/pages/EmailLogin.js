@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from '../api';
+import { FiMail } from "react-icons/fi";
 
 function EmailLogin() {
   const [email, setEmail] = useState("");
@@ -23,14 +24,14 @@ function EmailLogin() {
       const result = await res.json();
 
       if (result.success) {
-        alert('📧 OTP sent to your email!');
+        alert('OTP sent to your email!');
         setStep(2);
       } else {
-        alert('❌ ' + result.message);
+        alert(result.message);
       }
     } catch (error) {
       console.error(error);
-      alert('❌ Connection failed');
+      alert('Connection failed');
     }
 
     setLoading(false);
@@ -74,11 +75,11 @@ function EmailLogin() {
         navigate('/user');
 
       } else {
-        alert('❌ ' + result.message);
+        alert(result.message);
       }
     } catch (error) {
       console.error(error);
-      alert('❌ Verification failed');
+      alert('Verification failed');
     }
 
     setLoading(false);
@@ -87,7 +88,7 @@ function EmailLogin() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h2>📧 Email Login</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}><FiMail color="#ea580c" /> Email Login</h2>
 
         {step === 1 ? (
           <form onSubmit={sendEmailOtp}>

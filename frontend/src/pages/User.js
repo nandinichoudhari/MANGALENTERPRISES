@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiUrl } from '../api';
+import { FiCheck, FiLoader, FiTruck, FiStar, FiUser, FiPackage, FiMapPin, FiLogOut, FiEdit3, FiShoppingBag, FiCreditCard } from "react-icons/fi";
 
 const STEPS = [
-  { key: 'confirmed', label: 'Order Confirmed', icon: '✓' },
-  { key: 'preparing', label: 'Preparing', icon: '◎' },
-  { key: 'out', label: 'Out for Delivery', icon: '→' },
-  { key: 'delivered', label: 'Delivered', icon: '★' },
+  { key: 'confirmed', label: 'Order Confirmed', icon: <FiCheck /> },
+  { key: 'preparing', label: 'Preparing', icon: <FiLoader /> },
+  { key: 'out', label: 'Out for Delivery', icon: <FiTruck /> },
+  { key: 'delivered', label: 'Delivered', icon: <FiStar /> },
 ];
 
 function User() {
@@ -123,7 +124,7 @@ function User() {
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#2C1810' }}>{userData?.name || 'Customer'}</h2>
               <p style={{ margin: '4px 0', fontSize: 14, color: '#8B7355' }}>{userData?.phone}</p>
               {userData?.email && <p style={{ margin: '2px 0', fontSize: 13, color: '#B8A99A' }}>{userData.email}</p>}
-              <button onClick={() => setEditing(true)} style={S.editBtn}>Edit Profile</button>
+              <button onClick={() => setEditing(true)} style={S.editBtn}><FiEdit3 size={14} style={{marginRight: 4}} /> Edit Profile</button>
             </div>
           )}
         </div>
@@ -131,14 +132,17 @@ function User() {
         {/* ── STATS ── */}
         <div style={S.statsRow}>
           <div style={S.statCard}>
+            <FiPackage size={18} color="#8B7355" style={{marginBottom: 4}} />
             <div style={S.statVal}>{orders.length}</div>
             <div style={S.statLabel}>Orders</div>
           </div>
           <div style={S.statCard}>
+            <FiShoppingBag size={18} color="#8B7355" style={{marginBottom: 4}} />
             <div style={S.statVal}>₹{totalSpent.toLocaleString('en-IN')}</div>
-            <div style={S.statLabel}>Total Spent</div>
+            <div style={S.statLabel}>Spent</div>
           </div>
           <div style={S.statCard}>
+            <FiMapPin size={18} color="#8B7355" style={{marginBottom: 4}} />
             <div style={S.statVal}>{addresses.length}</div>
             <div style={S.statLabel}>Addresses</div>
           </div>
@@ -184,9 +188,9 @@ function User() {
                   {/* address + payment */}
                   <div style={S.orderMeta}>
                     {order.address?.address1 && (
-                      <span style={S.metaItem}>{order.address.address1}, {order.address.city}</span>
+                      <span style={{...S.metaItem, display: 'flex', alignItems: 'center', gap: 4}}><FiMapPin size={12} /> {order.address.address1}, {order.address.city}</span>
                     )}
-                    <span style={S.payBadge}>{(order.paymentMethod || 'COD').toUpperCase()}</span>
+                    <span style={{...S.payBadge, display: 'flex', alignItems: 'center', gap: 4}}><FiCreditCard size={12} /> {(order.paymentMethod || 'COD').toUpperCase()}</span>
                   </div>
 
                   {/* Track / Feedback buttons */}
@@ -202,7 +206,7 @@ function User() {
                   </div>
                   {order.status === 'delivered' && order.feedback && (
                     <div style={{ marginTop: 12, padding: 10, background: '#F9FBE7', borderRadius: 8, color: '#33691E', fontSize: 13, textAlign: 'center' }}>
-                      ★ {order.feedback.rating}/5 Rating Submitted
+                    <FiStar size={14} style={{marginRight: 4}} /> {order.feedback.rating}/5 Rating Submitted
                     </div>
                   )}
 
@@ -283,7 +287,7 @@ function User() {
             'token', 'cart', 'checkoutCart', 'selectedAddress', 'deliveryAddress', 'menuQuantities', 'emailVerified'
           ].forEach(k => localStorage.removeItem(k));
           navigate('/login');
-        }} style={S.logoutBtn}>Sign Out</button>
+        }} style={S.logoutBtn}><FiLogOut size={16} style={{marginRight: 8, verticalAlign: 'middle'}} /> Sign Out</button>
 
       </div>
     </div>

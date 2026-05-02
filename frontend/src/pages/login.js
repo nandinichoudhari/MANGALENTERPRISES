@@ -46,7 +46,7 @@ function Login() {
 
       if (data.success) {
         setStep(2);
-        alert(`📧 OTP sent to ${formData.email}! Check inbox/spam`);
+        alert(`OTP sent to ${formData.email}! Check inbox/spam`);
       } else {
         alert(data.message || "Failed to send OTP");
       }
