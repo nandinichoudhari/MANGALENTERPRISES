@@ -22,25 +22,28 @@ function User() {
 
   useEffect(() => {
     const phone = localStorage.getItem('phone');
-    if (!phone) { navigate('/login'); return; }
+    const email = localStorage.getItem('userEmail') || localStorage.getItem('currentUserEmail') || '';
+    
+    // Accept either phone or email
+    if (!phone && !email) { navigate('/login'); return; }
 
     const name = localStorage.getItem('userName') || localStorage.getItem('currentUserName') || '';
-    const email = localStorage.getItem('userEmail') || localStorage.getItem('currentUserEmail') || '';
     setUserData({ phone, name, email });
     setEditForm({ name, phone });
-    loadUserData(phone);
+    loadUserData({ phone, email });
   }, [navigate]);
 
-  const loadUserData = async (phone) => {
+  const loadUserData = async ({ phone, email }) => {
     setLoading(true);
     try {
-      // Fetch orders from the Order collection (has full address + payment)
-      const ordRes = await fetch(apiUrl(`/api/myorders?phone=${phone}`));
+      const q = email ? `email=${encodeURIComponent(email)}` : `phone=${phone}`;
+      // Fetch orders from the Order collection
+      const ordRes = await fetch(apiUrl(`/api/myorders?${q}`));
       const ordData = await ordRes.json();
       setOrders(ordData.orders || []);
 
       // Fetch saved addresses
-      const addrRes = await fetch(apiUrl(`/api/user-addresses?phone=${phone}`));
+      const addrRes = await fetch(apiUrl(`/api/user-addresses?${q}`));
       const addrData = await addrRes.json();
       setAddresses(addrData.addresses || []);
     } catch {
@@ -186,10 +189,22 @@ function User() {
                     <span style={S.payBadge}>{(order.paymentMethod || 'COD').toUpperCase()}</span>
                   </div>
 
-                  {/* Track button */}
-                  <button onClick={() => setTrackingId(isTracking ? null : (order.orderId || order._id))} style={S.trackBtn}>
-                    {isTracking ? 'Hide Tracking' : 'Track Order'}
-                  </button>
+                  {/* Track / Feedback buttons */}
+                  <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                    <button onClick={() => setTrackingId(isTracking ? null : (order.orderId || order._id))} style={{ ...S.trackBtn, marginTop: 0, flex: 1 }}>
+                      {isTracking ? 'Hide Tracking' : 'Track Order'}
+                    </button>
+                    {order.status === 'delivered' && !order.feedback && (
+                      <Link to={`/feedback/${order.orderId || order._id}`} state={{ order }} style={{ ...S.trackBtn, marginTop: 0, flex: 1, textAlign: 'center', textDecoration: 'none', background: '#FFF3E0', color: '#E65100', borderColor: '#FFE0B2' }}>
+                        Leave Feedback
+                      </Link>
+                    )}
+                  </div>
+                  {order.status === 'delivered' && order.feedback && (
+                    <div style={{ marginTop: 12, padding: 10, background: '#F9FBE7', borderRadius: 8, color: '#33691E', fontSize: 13, textAlign: 'center' }}>
+                      ★ {order.feedback.rating}/5 Rating Submitted
+                    </div>
+                  )}
 
                   {/* ── TRACKING ANIMATION ── */}
                   {isTracking && (

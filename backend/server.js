@@ -130,27 +130,27 @@ app.get('/test-email', async (req, res) => {
 =========================== */
 app.post('/api/send-email-otp', async (req, res) => {
   try {
-    const { email, phone, name } = req.body;
+    const { email, name } = req.body;
 
-    if (!email || !phone) {
-      return res.status(400).json({ success: false, message: "Email and phone are required" });
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
-    // Find by email OR phone — avoids duplicate key on upsert
-    const existing = await User.findOne({ $or: [{ phone }, { email }] });
+    // Find exclusively by email since it's the primary discriminator
+    const existing = await User.findOne({ email });
 
     if (existing) {
-      // Update the FOUND document by its _id (no unique-index collision possible)
+      // Update the FOUND document by its _id
       await User.updateOne(
         { _id: existing._id },
-        { $set: { name: name || existing.name || '', email, phone, otp, otpExpiry, isVerified: false } }
+        { $set: { name: name || existing.name || '', otp, otpExpiry, isVerified: false } }
       );
     } else {
-      // Genuinely new user — create fresh document
-      await User.create({ phone, email, name: name || '', otp, otpExpiry, isVerified: false });
+      // Genuinely new user from email — create fresh document
+      await User.create({ email, name: name || '', otp, otpExpiry, isVerified: false });
     }
 
     await sendEmail({
@@ -180,15 +180,15 @@ app.post('/api/send-email-otp', async (req, res) => {
 =========================== */
 app.post('/api/verify-email-otp', async (req, res) => {
   try {
-    const { phone, email, otp } = req.body;
+    const { email, otp } = req.body;
 
-    console.log('🔍 VERIFY REQUEST:', { phone, email, otp });
+    console.log('🔍 VERIFY REQUEST:', { email, otp });
 
-    // Find user by phone OR email (same logic as send endpoint)
-    const user = await User.findOne({ $or: [{ phone }, { email }] });
+    // Find exclusively by email
+    const user = await User.findOne({ email });
 
     if (!user) {
-      console.log('❌ No user found for phone:', phone, 'or email:', email);
+      console.log('❌ No user found for email:', email);
       return res.json({ success: false, message: "User not found" });
     }
 
@@ -208,11 +208,21 @@ app.post('/api/verify-email-otp', async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { phone: user.phone },
+      { email: user.email },
       process.env.JWT_SECRET || "fallback_secret"
     );
 
-    res.json({ success: true, token });
+    // Return the user data so frontend can properly populate local state
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone || '',
+        email: user.email
+      }
+    });
 
   } catch (error) {
     console.error("❌ VERIFY ERROR:", error);
@@ -281,37 +291,33 @@ app.post('/api/update-order-status', async (req, res) => {
 =========================== */
 app.post('/api/save-address', async (req, res) => {
   try {
-    const { phone, name, address1, address2, city } = req.body;
+    const { email, phone, name, address1, address2, city } = req.body;
 
-    if (!phone) return res.status(400).json({ success: false, message: 'Phone is required' });
+    if (!email && !phone) return res.status(400).json({ success: false, message: 'Email or phone is required' });
 
     const addressObj = {
       _id: new mongoose.Types.ObjectId(),
       name: name || '',
-      phone,
+      phone: phone || '',
       address1: address1 || '',
       address2: address2 || '',
       city: city || '',
       createdAt: new Date()
     };
 
-    // Step 1: try to push to existing user
-    const result = await User.updateOne(
-      { phone },
-      { $push: { addresses: addressObj } }
+    // Use email if present, fallback to phone
+    const query = email ? { email } : { phone };
+
+    await User.findOneAndUpdate(
+      query,
+      {
+        $push: { addresses: addressObj },
+        $setOnInsert: { email, phone, name: name || 'Customer', isVerified: false }
+      },
+      { upsert: true, new: true }
     );
 
-    // Step 2: if no user found, create one with address
-    if (result.matchedCount === 0) {
-      await User.create({
-        phone,
-        name: name || 'Customer',
-        isVerified: false,
-        addresses: [addressObj]
-      });
-    }
-
-    console.log('✅ Address saved for:', phone, '| created new user:', result.matchedCount === 0);
+    console.log('✅ Address saved for:', email || phone);
     res.json({ success: true, address: addressObj });
 
   } catch (error) {
@@ -326,8 +332,9 @@ app.post('/api/save-address', async (req, res) => {
 =========================== */
 app.get('/api/user-addresses', async (req, res) => {
   try {
-    const phone = req.query.phone;
-    const user = await User.findOne({ phone });
+    const { phone, email } = req.query;
+    const query = email ? { email } : { phone };
+    const user = await User.findOne(query);
 
     res.json({
       success: true,
@@ -342,10 +349,11 @@ app.get('/api/user-addresses', async (req, res) => {
 /* ===========================
    GET ORDERS
 =========================== */
-app.get('/api/orders', async (req, res) => {
+app.get(['/api/orders', '/api/myorders'], async (req, res) => {
   try {
-    const phone = req.query.phone;
-    const user = await User.findOne({ phone });
+    const { phone, email } = req.query;
+    const query = email ? { email } : { phone };
+    const user = await User.findOne(query);
 
     res.json({
       success: true,
@@ -378,12 +386,14 @@ app.post('/api/place-order', async (req, res) => {
       timestamp: new Date()
     };
 
-    // Add to user's orders array
+    // Add order to user's orders array only
+    const query = userEmail ? { email: userEmail } : { phone: userPhone };
+
     await User.findOneAndUpdate(
-      { phone: userPhone },
+      query,
       {
         $push: { orders: order },
-        $setOnInsert: { phone: userPhone, isVerified: false }
+        $setOnInsert: { email: userEmail || undefined, phone: userPhone || undefined, name: userName || 'Customer', isVerified: false }
       },
       { upsert: true }
     );
@@ -393,7 +403,7 @@ app.post('/api/place-order', async (req, res) => {
     const newOrder = new Order(order);
     await newOrder.save();
 
-    console.log('🧾 ORDER SAVED:', userPhone, 'Total: ₹' + total);
+    console.log('🧾 ORDER SAVED:', userEmail || userPhone, 'Total: ₹' + total);
     res.json({ success: true, orderId: order.orderId });
 
   } catch (error) {

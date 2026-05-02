@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  // ✅ KEEP phone as-is (existing data)
-  phone: { type: String, unique: true, required: true },
+  // Phone is now optional, email is primary
+  phone: { type: String, unique: true, sparse: true },
 
-  // ✅ KEEP email (new field for OTP)
-  email: { type: String, unique: true, sparse: true },
+  // Email is now the primary unique identifier
+  email: { type: String, unique: true, required: true },
 
-  // ✅ KEEP name 
+  // Name
   name: String,
 
   // ✅ NEW: ADDRESSES ARRAY
@@ -41,6 +41,11 @@ const userSchema = new mongoose.Schema({
     },
     paymentMethod: String,
     status: { type: String, default: 'confirmed' },
+    feedback: {
+      rating: Number,
+      comment: String,
+      submittedAt: Date
+    },
     razorpayOrderId: String,
     razorpayPaymentId: String,
     timestamp: { type: Date, default: Date.now }

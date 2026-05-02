@@ -58,6 +58,17 @@ function Home() {
     { step: "04", title: "Receive Fresh", desc: "Your freshly prepared order arrives at your doorstep." },
   ];
 
+  const SPECIALTIES = [
+    { name: "Authentic Puranpoli", desc: "Melt-in-mouth sweet flatbread", image: "puranpoli.jpeg" },
+    { name: "Ukadiche Modak", desc: "Steamed sweet coconut dumplings", image: "modak.jpeg" },
+    { name: "Crispy Chakli", desc: "Crunchy & perfectly spiced", image: "chakli.jpeg" },
+    { name: "Spicy Bhakarwadi", desc: "Tangy and sweet crispy rolls", image: "bhakarwadi.jpeg" },
+    { name: "Kothimbir Vadi", desc: "Crispy coriander snack", image: "kothimbirvadi.jpeg" },
+    { name: "Besan Ladoo", desc: "Rich roasted gram flour sweets", image: "besanladoo.jpeg" },
+    { name: "Khajur Pak", desc: "Healthy dates & dry fruit sweet", image: "khajurpak.jpeg" },
+    { name: "Crunchy Shev", desc: "Spicy and savory snack", image: "shev.jpeg" },
+  ];
+
   return (
     <div className="home-page">
 
@@ -74,13 +85,19 @@ function Home() {
           </p>
           <div className="hero-actions">
             <Link to="/menu" className="btn-primary">View Menu &amp; Order</Link>
-            <a href="tel:9825121370" className="btn-secondary">Call to Order</a>
+            <a href="https://wa.me/919892512137" target="_blank" rel="noopener noreferrer" className="btn-secondary">Call / WhatsApp to Order</a>
           </div>
         </div>
-        <div
-          className="hero-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/fire.jpg)` }}
-        />
+        <div className="hero-image-wrapper">
+          <div
+            className="hero-image"
+            style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/products/puranpoli.jpeg)` }}
+          />
+          <div className="hero-floating-badge">
+            <span>🌟</span>
+            <div>100% Homemade<br/>Maharashtrian</div>
+          </div>
+        </div>
       </section>
 
       {/* ── STATS ── */}
@@ -91,6 +108,30 @@ function Home() {
             <div className="home-stat-label">{label}</div>
           </div>
         ))}
+      </section>
+
+      {/* ── OUR SPECIALTIES ── */}
+      <section className="section specialties-section">
+        <h2 className="section-title">Drool-Worthy Delicacies</h2>
+        <p className="section-subtitle-center">Taste the authentic flavours of Maharashtra</p>
+        <div className="specialties-grid">
+          {SPECIALTIES.map((item) => (
+            <div key={item.name} className="specialty-card">
+              <div 
+                className="specialty-image" 
+                style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/products/${item.image})` }}
+              >
+                <div className="specialty-overlay">
+                  <Link to="/menu" className="specialty-btn">Order Now</Link>
+                </div>
+              </div>
+              <div className="specialty-info">
+                <h4 className="specialty-name">{item.name}</h4>
+                <p className="specialty-desc">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── WHY CHOOSE US ── */}
@@ -129,7 +170,7 @@ function Home() {
 
       {/* ── CONTACT STRIP ── */}
       <div className="home-contact-strip">
-        Call or WhatsApp: <strong>98251 21370</strong>
+        Call or WhatsApp: <strong><a href="https://wa.me/919892512137" target="_blank" rel="noopener noreferrer" style={{color: 'inherit', textDecoration: 'none'}}>98925 12137</a></strong>
       </div>
 
     </div>

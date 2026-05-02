@@ -97,6 +97,8 @@ function Payment() {
         localStorage.removeItem('cart');
         localStorage.removeItem('checkoutCart');
         localStorage.removeItem('deliveryAddress');
+        // Notify App.js to clear cart state immediately
+        window.dispatchEvent(new StorageEvent('storage', { key: 'cart', newValue: null }));
         alert(`✅ Order placed! ID: ${result.orderId}`);
         navigate("/order-confirmed");
       } else {
@@ -181,6 +183,8 @@ function Payment() {
               localStorage.removeItem('cart');
               localStorage.removeItem('checkoutCart');
               localStorage.removeItem('deliveryAddress');
+              // Notify App.js to clear cart state immediately
+              window.dispatchEvent(new StorageEvent('storage', { key: 'cart', newValue: null }));
               alert(`✅ Payment successful! Order ID: ${verifyData.orderId}`);
               navigate("/order-confirmed");
             } else {

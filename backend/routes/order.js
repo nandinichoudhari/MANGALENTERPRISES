@@ -62,12 +62,39 @@ router.get('/allorders', async (req, res) => {
 // 🔥 NEW: USER GET MY ORDERS
 router.get('/myorders', async (req, res) => {
   try {
-    const { phone } = req.query;
+    const { phone, email } = req.query;
     const Order = require('../models/Order');
-    const orders = await Order.find({ userPhone: phone }).sort({ timestamp: -1 });
+    const query = [];
+    if (email) query.push({ userEmail: email });
+    if (phone) query.push({ userPhone: phone });
+
+    if (query.length === 0) return res.json({ orders: [] });
+
+    const orders = await Order.find({ $or: query }).sort({ timestamp: -1 });
     res.json({ orders });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// 🔥 NEW: SUBMIT FEEDBACK
+router.post('/submit-feedback', async (req, res) => {
+  try {
+    const { orderId, rating, comment } = req.body;
+    if (!orderId || !rating) return res.status(400).json({ success: false, message: 'Missing orderId or rating' });
+
+    const Order = require('../models/Order');
+    const feedback = { rating, comment, submittedAt: new Date() };
+
+    await Order.updateOne({ orderId }, { $set: { feedback } });
+    await User.updateOne(
+      { 'orders.orderId': orderId },
+      { $set: { 'orders.$.feedback': feedback } }
+    );
+
+    res.json({ success: true, message: 'Feedback submitted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

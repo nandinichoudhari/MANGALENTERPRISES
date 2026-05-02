@@ -21,6 +21,11 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: String,
   status: { type: String, default: 'confirmed' },
+  feedback: {
+    rating: Number,
+    comment: String,
+    submittedAt: Date
+  },
   timestamp: { type: Date, default: Date.now }
 });
 

@@ -15,6 +15,7 @@ import OrderConfirmed from "./pages/OrderConfirmed";
 import User from './pages/User';
 import EmailLogin from './pages/EmailLogin';
 import AdminDashboard from './AdminDashboard';
+import Feedback from './pages/Feedback';
 
 // 🔥 NAVBAR WRAPPER - HIDES ON ADMIN
 function Layout({ children, cartCount, addToCart, cartItems, setCartItems }) {
@@ -161,6 +162,11 @@ function App() {
         <Route path="/email-login" element={
           <Layout cartCount={getCartCount} addToCart={addToCart} cartItems={cartItems} setCartItems={setCartItems}>
             <EmailLogin />
+          </Layout>
+        } />
+        <Route path="/feedback/:orderId" element={
+          <Layout cartCount={getCartCount} addToCart={addToCart} cartItems={cartItems} setCartItems={setCartItems}>
+            <Feedback />
           </Layout>
         } />
 

@@ -15,23 +15,26 @@ function Address() {
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("loggedIn") === "true";
-    const phone = localStorage.getItem('phone');
+    const phone = localStorage.getItem('phone') || '';
+    const email = localStorage.getItem('userEmail') || localStorage.getItem('currentUserEmail') || '';
     const name = localStorage.getItem('userName') || localStorage.getItem('currentUserName') || '';
 
-    if (!isLoggedIn || !phone) {
+    // Allow user if they have either a phone or an email (because email uniqueness is supported)
+    if (!isLoggedIn || (!phone && !email)) {
       navigate("/login");
       return;
     }
 
-    // Pre-fill form with logged-in user's details so validation passes for new users
+    // Pre-fill form with logged-in user's details
     setAddress(prev => ({ ...prev, phone, name }));
-    fetchUserAddresses(phone);
+    fetchUserAddresses({ phone, email });
   }, [navigate]);
 
-  const fetchUserAddresses = async (phone, autoSelectLatest = false) => {
+  const fetchUserAddresses = async ({ phone, email, autoSelectLatest = false }) => {
     setLoadingAddresses(true);
     try {
-      const response = await fetch(apiUrl(`/api/user-addresses?phone=${phone}`));
+      const q = email ? `email=${encodeURIComponent(email)}` : `phone=${phone}`;
+      const response = await fetch(apiUrl(`/api/user-addresses?${q}`));
       const result = await response.json();
 
       if (result.success) {
@@ -56,7 +59,7 @@ function Address() {
   const validateForm = () => {
     const newErrors = {};
     if (!address.name.trim()) newErrors.name = "Name required";
-    if (!address.phone.trim() || address.phone.length !== 10) newErrors.phone = "10-digit phone required";
+    if (!address.phone.trim() || address.phone.length !== 10) newErrors.phone = "10-digit phone required for delivery";
     if (!address.address1.trim()) newErrors.address1 = "Street address required";
     if (!address.city.trim()) newErrors.city = "City required";
 
@@ -72,34 +75,56 @@ function Address() {
       return;
     }
 
-    const loggedInPhone = localStorage.getItem('phone');
+    const email = localStorage.getItem('userEmail') || localStorage.getItem('currentUserEmail') || '';
+    const loggedInPhone = localStorage.getItem('phone') || '';
 
-    if (!loggedInPhone) {
-      alert("User phone not found. Please login again.");
+    if (!loggedInPhone && !email) {
+      alert("User identification not found. Please login again.");
       navigate("/login");
       return;
     }
 
     try {
-      console.log("📱 Sending address for phone:", loggedInPhone);
+      const reqBody = {
+        name: address.name,
+        address1: address.address1,
+        address2: address.address2,
+        city: address.city,
+        phone: address.phone // this is the delivery phone they entered
+      };
+      
+      // Pass primary identifiers to link the address
+      if (email) reqBody.email = email;
+      if (loggedInPhone && !email) reqBody.phone = loggedInPhone; // only override with loggedin phone if no email, but actually delivery phone is sent for contact. I will actually just pass it along:
+      
+      // Wait, earlier logic sent:
+      // phone: loggedInPhone
+      // And the address block had no delivery phone!
+      // Let's preserve the phone they entered as delivery contact, and strictly use email for identity if present.
+      
+      const payload = {
+          name: address.name,
+          address1: address.address1,
+          address2: address.address2,
+          city: address.city,
+          phone: address.phone // This becomes the contact phone for the address block
+      };
+      // For identity mapping, the backend accepts `email` to find the user
+      if (email) payload.email = email;
+
+      console.log("📱 Sending address");
 
       const response = await fetch(apiUrl('/api/save-address'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: address.name,
-          phone: loggedInPhone,  // 🔥 Always use logged-in phone
-          address1: address.address1,
-          address2: address.address2,
-          city: address.city
-        })
+        body: JSON.stringify(payload)
       });
 
       const result = await response.json();
 
       if (result.success) {
         // Refresh list and auto-select the newest address (last one saved)
-        await fetchUserAddresses(loggedInPhone, true);
+        await fetchUserAddresses({ phone: loggedInPhone, email, autoSelectLatest: true });
         setShowForm(false);
         setAddress({ name: '', phone: localStorage.getItem('phone') || '', address1: '', address2: '', city: '' });
       } else {

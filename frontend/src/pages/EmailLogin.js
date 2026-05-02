@@ -65,6 +65,11 @@ function EmailLogin() {
         localStorage.setItem('userEmail', email);
         localStorage.setItem('emailVerified', 'true');
         localStorage.setItem('token', result.token);
+        
+        if (result.user) {
+          if (result.user.name) localStorage.setItem('userName', result.user.name);
+          if (result.user.phone) localStorage.setItem('phone', result.user.phone);
+        }
 
         navigate('/user');
 

@@ -71,15 +71,12 @@ function AdminDashboard() {
 
   useEffect(() => { if (auth) fetchData(); }, [auth]);
 
-  /* ── build customers from ORDERS when users collection is empty ── */
+  /* ── build customers from BOTH registered users AND orders ── */
   const customers = useMemo(() => {
     const registered = data.logins || [];
     const orders = data.orders || [];
 
-    // If we have registered users, use them
-    if (registered.length > 0) return registered;
-
-    // Otherwise, derive customers from order data
+    // Step 1: Build a map from ALL orders (covers unregistered customers too)
     const map = {};
     orders.forEach(o => {
       const key = o.userPhone || o.userEmail || 'unknown';
@@ -97,13 +94,29 @@ function AdminDashboard() {
       }
       map[key].orderCount += 1;
       map[key].totalSpent += (o.total || 0);
-      // keep latest timestamp
       if (o.timestamp && (!map[key].lastOrder || new Date(o.timestamp) > new Date(map[key].lastOrder))) {
         map[key].lastOrder = o.timestamp;
       }
-      // update name if we have a better one
       if (o.userName && o.userName !== 'Unknown' && o.userName !== 'Customer') {
         map[key].name = o.userName;
+      }
+    });
+
+    // Step 2: Merge registered user data on top (richer profile info)
+    registered.forEach(u => {
+      const key = u.phone || u.email || 'unknown';
+      if (map[key]) {
+        // Merge — registered data wins for profile fields
+        map[key].name = u.name || map[key].name;
+        map[key].email = u.email || map[key].email;
+        map[key].isVerified = u.isVerified || false;
+        map[key].addressCount = u.addressCount || map[key].addressCount;
+        if (u.orderCount) map[key].orderCount = u.orderCount;
+        if (u.totalSpent) map[key].totalSpent = u.totalSpent;
+        if (u.lastOrder) map[key].lastOrder = u.lastOrder;
+      } else {
+        // Registered user with no orders yet
+        map[key] = { ...u, orderCount: u.orderCount || 0, totalSpent: u.totalSpent || 0 };
       }
     });
 
