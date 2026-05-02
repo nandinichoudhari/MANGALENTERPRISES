@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { FiStar, FiHome, FiShield, FiClock, FiHeart, FiTruck, FiTag } from "react-icons/fi";
+import InstallPWA from "../components/InstallPWA";
 
 function useCountUp(target, duration, active) {
   const [count, setCount] = useState(0);
@@ -87,6 +88,9 @@ function Home() {
           <div className="hero-actions">
             <Link to="/menu" className="btn-primary">View Menu &amp; Order</Link>
             <a href="https://wa.me/919892512137" target="_blank" rel="noopener noreferrer" className="btn-secondary">Call / WhatsApp to Order</a>
+          </div>
+          <div style={{ marginTop: '20px', maxWidth: '300px' }}>
+            <InstallPWA />
           </div>
           <div className="delivery-partners" style={{ justifyContent: 'flex-start', marginTop: '24px' }}>
             <p style={{ width: '100%', fontWeight: '700', fontSize: '14px', marginBottom: '8px', color: '#6b2f1a' }}>Or order via:</p>
