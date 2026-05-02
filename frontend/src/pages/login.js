@@ -108,7 +108,7 @@ function Login() {
   };
 
   return (
-    <div className="page-content">
+    <div className="login-page">
       <div className="login-container">
         <h2 className="page-title">Login / Signup</h2>
 
