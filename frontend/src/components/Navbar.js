@@ -1,5 +1,5 @@
 import "./Navbar.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiShoppingBag, FiPhone, FiSearch, FiX, FiUser, FiHome, FiGrid, FiLogIn } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import { PRODUCTS } from "../pages/Menu";

@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { FiPhone, FiBox, FiCoffee, FiHeart, FiStar } from "react-icons/fi";
+
+const TAB_ICONS = {
+  NAMKIN: <FiBox />,
+  "SWEET LADOO": <FiCoffee />,
+  "HEALTH SPECIAL LADOO": <FiHeart />,
+  TRADITIONAL: <FiStar />,
+};
 
 export const PRODUCTS = [
   // NAMKIN
