@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 export const PRODUCTS = [
   // NAMKIN
@@ -41,7 +42,9 @@ const SECTIONS = {
   TRADITIONAL: PRODUCTS.filter(p => p.section === "TRADITIONAL"),
 };
 
-function Menu({ addToCart, searchTerm = "" }) {
+function Menu({ addToCart }) {
+  const location = useLocation();
+  const searchTerm = location.state?.searchTerm || "";
   const [activeTab, setActiveTab] = useState("NAMKIN");
   const [quantities, setQuantities] = useState({});
   const [loading, setLoading] = useState(true);
