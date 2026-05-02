@@ -1,7 +1,36 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
+// Dombivli East coordinates
+const BASE_LAT = 19.2183;
+const BASE_LNG = 73.0867;
+
+// Haversine formula — distance between two GPS points in km
+function getDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Delivery charge rules
+function calcDeliveryCharge(distKm) {
+  if (distKm <= 3) return 60;
+  return 60 + Math.ceil(distKm - 3) * 11;
+}
 
 function Cart({ items, setItems }) {
   const navigate = useNavigate();
+  const [deliveryCharge, setDeliveryCharge] = useState(null);
+  const [distance, setDistance] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState("");
 
   const validItems = Array.isArray(items)
     ? items.filter(item => item && item.id && item.price > 0 && item.name)
@@ -33,37 +62,67 @@ function Cart({ items, setItems }) {
   };
 
   const totalItems = validItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
-  const total = validItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+  const subtotal = validItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+  const finalTotal = subtotal + (deliveryCharge || 0);
 
-  // 🔥 PERFECT CHECKOUT FLOW
+  const detectLocation = () => {
+    setLocating(true);
+    setLocError("");
+
+    if (!navigator.geolocation) {
+      setLocError("Your browser doesn't support GPS. Please use a modern browser.");
+      setLocating(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const dist = getDistanceKm(BASE_LAT, BASE_LNG, latitude, longitude);
+        const charge = calcDeliveryCharge(dist);
+        setDistance(Math.round(dist * 10) / 10);
+        setDeliveryCharge(charge);
+        localStorage.setItem('deliveryCharge', charge.toString());
+        localStorage.setItem('deliveryDistance', dist.toFixed(1));
+        setLocating(false);
+      },
+      (error) => {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setLocError("Location access denied. Please allow location in your browser settings.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setLocError("Location unavailable. Please try again.");
+            break;
+          default:
+            setLocError("Could not detect location. Please try again.");
+        }
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const handleCheckout = () => {
-    console.log('🛒 Place Order clicked!');
-
-    // 1. CHECK LOGIN
     const phone = localStorage.getItem('phone');
     if (!phone) {
       navigate("/login");
       return;
     }
-
-    // 2. CHECK CART NOT EMPTY
     if (validItems.length === 0) {
       alert("Your cart is empty!");
       return;
     }
+    if (deliveryCharge === null) {
+      alert("Please detect your location first to calculate delivery charges.");
+      return;
+    }
 
-    // 🔥 3. SAVE CART DATA FIRST
     localStorage.setItem('checkoutCart', JSON.stringify(validItems));
-    localStorage.setItem('checkoutTotal', total.toString());
-
-    console.log('✅ Saved cart for checkout:', validItems.length, 'items');
-    navigate("/address");  // Now goes to Address with cart data ✅
+    localStorage.setItem('checkoutTotal', finalTotal.toString());
+    localStorage.setItem('deliveryCharge', deliveryCharge.toString());
+    navigate("/address");
   };
-
-
-
-
-
 
   return (
     <div className="cart-page">
@@ -108,14 +167,85 @@ function Cart({ items, setItems }) {
         })}
       </div>
 
+      {/* Delivery Location Detection */}
+      <div className="cart-summary" style={{ marginBottom: '16px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontWeight: '700', marginBottom: '12px', fontSize: '16px' }}>📍 Delivery Location</p>
+
+          {deliveryCharge === null ? (
+            <>
+              <button
+                onClick={detectLocation}
+                disabled={locating}
+                style={{
+                  padding: '12px 28px',
+                  background: locating ? '#ccc' : 'linear-gradient(135deg, #f97316, #ea580c)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '999px',
+                  fontWeight: '700',
+                  fontSize: '15px',
+                  cursor: locating ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {locating ? '📡 Detecting...' : '📍 Detect My Location'}
+              </button>
+              <p style={{ color: '#888', fontSize: '13px', marginTop: '8px' }}>
+                We need your location to calculate delivery charges
+              </p>
+              {locError && (
+                <p style={{ color: '#e23744', fontSize: '14px', marginTop: '8px', fontWeight: '600' }}>
+                  ⚠️ {locError}
+                </p>
+              )}
+            </>
+          ) : (
+            <div style={{ 
+              background: '#e8f5e9', 
+              padding: '16px', 
+              borderRadius: '12px',
+              border: '1px solid #c8e6c9'
+            }}>
+              <p style={{ color: '#2e7d32', fontWeight: '700', fontSize: '15px' }}>
+                ✅ Location detected!
+              </p>
+              <p style={{ color: '#555', fontSize: '14px', marginTop: '4px' }}>
+                You are ~{distance} km from Dombivli East
+              </p>
+              <button
+                onClick={detectLocation}
+                style={{
+                  marginTop: '8px',
+                  padding: '6px 16px',
+                  background: 'transparent',
+                  color: '#f97316',
+                  border: '1px solid #f97316',
+                  borderRadius: '999px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                🔄 Re-detect
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Order Summary */}
       <div className="cart-summary">
         <div className="summary-row">
           <span>Subtotal ({totalItems} items):</span>
-          <span>₹{total}</span>
+          <span>₹{subtotal}</span>
         </div>
-        <div className="summary-row delivery">
-          <span>Delivery:</span>
-          <span className="free">FREE</span>
+        <div className="summary-row">
+          <span>Delivery{distance ? ` (~${distance} km)` : ''}:</span>
+          <span style={{ color: deliveryCharge !== null ? '#4a1e0e' : '#888', fontWeight: '600' }}>
+            {deliveryCharge !== null ? `₹${deliveryCharge}` : 'Detect location ↑'}
+          </span>
         </div>
         <div className="summary-row">
           <span>Taxes:</span>
@@ -123,13 +253,13 @@ function Cart({ items, setItems }) {
         </div>
         <div className="summary-total">
           <span>Total:</span>
-          <strong>₹{total}</strong>
+          <strong>₹{deliveryCharge !== null ? finalTotal : subtotal}</strong>
         </div>
       </div>
 
       <div className="cart-actions">
         <button className="checkout-btn" onClick={handleCheckout}>
-          🧾 Place Order Now ₹{total}
+          🧾 Place Order Now ₹{deliveryCharge !== null ? finalTotal : subtotal}
         </button>
       </div>
     </div>
