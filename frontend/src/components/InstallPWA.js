@@ -50,19 +50,19 @@ const InstallPWA = () => {
         gap: '8px',
         width: '100%',
         padding: '12px',
-        background: 'linear-gradient(135deg, #ea580c, #f97316)',
+        background: '#4a1e0e',
         color: 'white',
         border: 'none',
         borderRadius: '12px',
         fontWeight: '700',
         fontSize: '14px',
         cursor: 'pointer',
-        boxShadow: '0 4px 15px rgba(234, 88, 12, 0.2)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
         marginBottom: '16px'
       }}
     >
       <FiDownload size={18} />
-      Download Mangal App
+      Download Mangal Enterprises App
     </button>
   );
 };
