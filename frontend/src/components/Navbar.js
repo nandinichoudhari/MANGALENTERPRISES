@@ -50,7 +50,7 @@ const Navbar = ({ cartCount }) => {
   const handleSearchSelect = (item) => {
     setSearchTerm(item.name);
     setShowResults(false);
-    navigate("/menu", { state: { searchTerm: item.name } });
+    navigate("/menu", { state: { searchTerm: item.name }, replace: true });
   };
 
   // ✅ UPDATED LOGOUT - Email multi-user compatible
@@ -153,11 +153,11 @@ const Navbar = ({ cartCount }) => {
           <span>🏠</span>
           Home
         </Link>
-        <Link to="/menu" className="bottom-nav-item">
+        <Link replace to="/menu" className="bottom-nav-item">
           <span>🍱</span>
           Menu
         </Link>
-        <Link to="/cart" className="bottom-nav-item">
+        <Link replace to="/cart" className="bottom-nav-item">
           <div style={{position: 'relative'}}>
             <span>🛒</span>
             {cartCount > 0 && <div className="bottom-cart-badge">{cartCount}</div>}
@@ -165,12 +165,12 @@ const Navbar = ({ cartCount }) => {
           Cart
         </Link>
         {isLoggedIn ? (
-          <Link to="/user" className="bottom-nav-item">
+          <Link replace to="/user" className="bottom-nav-item">
             <span>👤</span>
             Profile
           </Link>
         ) : (
-          <Link to="/login" className="bottom-nav-item">
+          <Link replace to="/login" className="bottom-nav-item">
             <span>🔑</span>
             Login
           </Link>
