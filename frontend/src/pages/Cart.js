@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiMapPin, FiNavigation, FiCheckCircle, FiRefreshCw, FiShoppingBag, FiAlertCircle, FiArrowRight } from "react-icons/fi";
+import { apiUrl } from "../api";
 
 // Dombivli East coordinates
 const BASE_LAT = 19.2183;
@@ -42,7 +43,7 @@ function Cart({ items, setItems }) {
       if (!email && !phone) return;
 
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/check-offer-eligibility?email=${email || ''}&phone=${phone || ''}`);
+        const res = await fetch(apiUrl(`/api/check-offer-eligibility?email=${email || ''}&phone=${phone || ''}`));
         const data = await res.json();
         if (data.eligible) {
           setOfferInfo(data);
