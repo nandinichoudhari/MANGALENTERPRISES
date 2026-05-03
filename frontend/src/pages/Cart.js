@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiMapPin, FiNavigation, FiCheckCircle, FiRefreshCw, FiShoppingBag, FiAlertCircle, FiArrowRight } from "react-icons/fi";
 
@@ -32,6 +32,31 @@ function Cart({ items, setItems }) {
   const [distance, setDistance] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState("");
+  const [offerInfo, setOfferInfo] = useState(null);
+  const [checkingOffer, setCheckingOffer] = useState(false);
+
+  // ✅ Check offer eligibility on mount
+  useEffect(() => {
+    const checkOffer = async () => {
+      const email = localStorage.getItem('email');
+      const phone = localStorage.getItem('phone');
+      if (!email && !phone) return;
+
+      setCheckingOffer(true);
+      try {
+        const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/check-offer-eligibility?email=${email || ''}&phone=${phone || ''}`);
+        const data = await res.json();
+        if (data.eligible) {
+          setOfferInfo(data);
+        }
+      } catch (err) {
+        console.error("Failed to check offer:", err);
+      } finally {
+        setCheckingOffer(false);
+      }
+    };
+    checkOffer();
+  }, []);
 
   const validItems = Array.isArray(items)
     ? items.filter(item => item && item.id && item.price > 0 && item.name)
@@ -64,7 +89,10 @@ function Cart({ items, setItems }) {
 
   const totalItems = validItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
   const subtotal = validItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
-  const finalTotal = subtotal + (deliveryCharge || 0);
+  
+  // Calculate discount if eligible
+  const discountAmount = offerInfo ? Math.round(subtotal * (offerInfo.discountPercentage / 100)) : 0;
+  const finalTotal = subtotal - discountAmount + (deliveryCharge || 0);
 
   const detectLocation = () => {
     setLocating(true);
@@ -122,6 +150,7 @@ function Cart({ items, setItems }) {
     localStorage.setItem('checkoutCart', JSON.stringify(validItems));
     localStorage.setItem('checkoutTotal', finalTotal.toString());
     localStorage.setItem('deliveryCharge', deliveryCharge.toString());
+    localStorage.setItem('applyOffer', offerInfo ? 'true' : 'false');
     navigate("/address");
   };
 
@@ -252,6 +281,12 @@ function Cart({ items, setItems }) {
           <span>Taxes:</span>
           <span>₹0</span>
         </div>
+        {offerInfo && (
+          <div className="summary-row" style={{ color: '#2e7d32', fontWeight: '600' }}>
+            <span>Discount (50% Off - 1st Order):</span>
+            <span>−₹{discountAmount}</span>
+          </div>
+        )}
         <div className="summary-total">
           <span>Total:</span>
           <strong>₹{deliveryCharge !== null ? finalTotal : subtotal}</strong>

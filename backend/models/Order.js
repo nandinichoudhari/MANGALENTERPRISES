@@ -26,6 +26,7 @@ const orderSchema = new mongoose.Schema({
     comment: String,
     submittedAt: Date
   },
+  offerApplied: { type: String, default: null }, // NEW: Track if 'FIRST20_OFFER' was used
   timestamp: { type: Date, default: Date.now }
 });
 

@@ -17,6 +17,7 @@ const { Resend } = require('resend');
 const axios = require('axios');
 const User = require('./models/User');
 const jwt = require('jsonwebtoken');
+const Promotion = require('./models/Promotion');
 
 const app = express();
 
@@ -368,49 +369,6 @@ app.get(['/api/orders', '/api/myorders'], async (req, res) => {
 /* ===========================
    PLACE ORDER
 =========================== */
-app.post('/api/place-order', async (req, res) => {
-  try {
-    const { userName, userPhone, userEmail, items, total, address, paymentMethod } = req.body;
-
-    const order = {
-      _id: new mongoose.Types.ObjectId(),
-      orderId: `ORD${Date.now()}`,
-      userName,
-      userPhone,
-      userEmail,
-      items,
-      total,
-      address,
-      paymentMethod,
-      status: 'confirmed',
-      timestamp: new Date()
-    };
-
-    // Add order to user's orders array only
-    const query = userEmail ? { email: userEmail } : { phone: userPhone };
-
-    await User.findOneAndUpdate(
-      query,
-      {
-        $push: { orders: order },
-        $setOnInsert: { email: userEmail || undefined, phone: userPhone || undefined, name: userName || 'Customer', isVerified: false }
-      },
-      { upsert: true }
-    );
-
-    // Also save to standalone Order collection (for admin)
-    const Order = require('./models/Order');
-    const newOrder = new Order(order);
-    await newOrder.save();
-
-    console.log('🧾 ORDER SAVED:', userEmail || userPhone, 'Total: ₹' + total);
-    res.json({ success: true, orderId: order.orderId });
-
-  } catch (error) {
-    console.error("❌ Order error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
 
 /* Admin data is handled by routes/admin.js */
 /* ===========================
@@ -428,6 +386,41 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => {
     console.log("✅ MongoDB Connected");
     console.log("📦 Connected DB:", mongoose.connection.name);
+
+    // ✅ CLEANUP: Drop old phone index if it's causing duplicate null errors
+    // Mongoose will recreate it as 'sparse' based on the User model
+    User.collection.dropIndex('phone_1').then(() => {
+      console.log("🧹 Dropped old phone index to fix duplicate nulls");
+    }).catch(() => {
+      // Index might not exist or already be correct
+    });
+
+    // ✅ INITIALIZE FIRST 20 CUSTOMERS OFFER
+    const initOffer = async () => {
+      try {
+        const startTime = new Date('2026-05-03T20:30:00+05:30'); // 8:30 PM IST
+        const existing = await Promotion.findOne({ code: 'FIRST20_OFFER' });
+        if (!existing) {
+          await Promotion.create({
+            code: 'FIRST20_OFFER',
+            description: 'Flat 50% Off on your 1st order! (First 20 customers only)',
+            discountPercentage: 50,
+            maxUsage: 20,
+            currentUsage: 0,
+            startTime: startTime,
+            isActive: true
+          });
+          console.log('🎁 FIRST20_OFFER initialized in DB');
+        } else {
+          // Ensure start time is correct if it already exists but we want to update it
+          // Only update if it hasn't been used yet or if you want to force it
+          // await Promotion.updateOne({ code: 'FIRST20_OFFER' }, { startTime });
+        }
+      } catch (err) {
+        console.error('❌ Failed to init offer:', err.message);
+      }
+    };
+    initOffer();
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

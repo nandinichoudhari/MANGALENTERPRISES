@@ -9,6 +9,8 @@ function Payment() {
   const [address, setAddress] = useState({});
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [loading, setLoading] = useState(false);
+  const [discountTotal, setDiscountTotal] = useState(null);
+  const [shouldApplyOffer, setShouldApplyOffer] = useState(false);
 
   useEffect(() => {
     // Address.js saves 'checkoutCart' right before navigating here.
@@ -22,6 +24,12 @@ function Payment() {
 
     setCartItems(cart);
     setAddress(addr);
+
+    const savedTotal = localStorage.getItem('checkoutTotal');
+    if (savedTotal) setDiscountTotal(parseFloat(savedTotal));
+
+    const offerFlag = localStorage.getItem('applyOffer') === 'true';
+    setShouldApplyOffer(offerFlag);
 
     if (cart.length === 0) {
       alert('Your cart is empty. Please add items before proceeding to payment.');
@@ -67,8 +75,9 @@ function Payment() {
       userPhone: phone,
       userEmail,
       items: cartItems,
-      total,
+      total: discountTotal || total, // Use discounted total from Cart.js
       address: addr,
+      applyOffer: shouldApplyOffer // 🔥 Send the offer flag
     };
   }, [cartItems, total]);
 
@@ -134,7 +143,7 @@ function Payment() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: total,
+          amount: discountTotal || total,
           receipt: `receipt_${Date.now()}`,
         }),
       });
@@ -154,7 +163,6 @@ function Payment() {
         key: data.key,
         amount: data.order.amount,
         currency: data.order.currency,
-        name: 'Mangal Enterprises',
         description: `Payment for ${totalItems} item${totalItems > 1 ? 's' : ''}`,
         order_id: data.order.id,
         handler: async function (response) {
@@ -290,7 +298,7 @@ function Payment() {
         </div>
         <div className="summary-total">
           <span>Grand Total:</span>
-          <strong>₹{total}</strong>
+          <strong>₹{discountTotal || total}</strong>
         </div>
       </div>
 
@@ -347,8 +355,8 @@ function Payment() {
           {loading
             ? 'Processing...'
             : paymentMethod === 'cod'
-              ? <><span>Place Order (COD) — ₹{total}</span> <FiArrowRight size={16} /></>
-              : <><span>Pay ₹{total} with Razorpay</span> <FiArrowRight size={16} /></>}
+              ? <><span>Place Order (COD) — ₹{discountTotal || total}</span> <FiArrowRight size={16} /></>
+              : <><span>Pay ₹{discountTotal || total} with Razorpay</span> <FiArrowRight size={16} /></>}
         </button>
       </div>
 

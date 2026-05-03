@@ -16,6 +16,7 @@ import User from './pages/User';
 import EmailLogin from './pages/EmailLogin';
 import AdminDashboard from './AdminDashboard';
 import Feedback from './pages/Feedback';
+import CountdownBanner from './components/CountdownBanner';
 
 // 🔥 NAVBAR WRAPPER - HIDES ON ADMIN
 function Layout({ children, cartCount, addToCart, cartItems, setCartItems }) {
@@ -25,6 +26,7 @@ function Layout({ children, cartCount, addToCart, cartItems, setCartItems }) {
   return (
     <div className="app-container">
       {!hideNavbar && <Navbar cartCount={cartCount()} />}
+      {!hideNavbar && <CountdownBanner />}
       <main className="page-content">{children}</main>
       {!hideNavbar && (
         <footer className="site-footer">
