@@ -57,8 +57,6 @@ function Menu({ addToCart }) {
   const [quantities, setQuantities] = useState({});
   const [loading, setLoading] = useState(true);
   const [visibleCards, setVisibleCards] = useState([]);
-  const TARGET_MS = new Date('2026-05-03T15:00:00Z').getTime();
-  const [timeLeft, setTimeLeft] = useState(TARGET_MS - Date.now());
 
   // Load quantities from localStorage
   useEffect(() => {
@@ -91,26 +89,7 @@ function Menu({ addToCart }) {
     return () => clearTimeout(timer);
   }, [activeTab]);
 
-  // ✅ Countdown timer — runs ONCE on mount, never restarts
-  useEffect(() => {
-    if (TARGET_MS - Date.now() <= 0) return;
-    const timer = setInterval(() => {
-      const remaining = TARGET_MS - Date.now();
-      setTimeLeft(remaining);
-      if (remaining <= 0) clearInterval(timer);
-    }, 1000);
-    return () => clearInterval(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ✅ Empty deps — NEVER recreates the interval
-
-  const formatTime = (ms) => {
-    if (ms <= 0) return "Offer is LIVE!";
-    const h = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const m = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((ms % (1000 * 60)) / 1000);
-    return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
-  };
-
+  // Removed timer logic
   const updateActiveTab = (tab) => {
     setActiveTab(tab);
     localStorage.setItem('menuActiveTab', tab);
@@ -152,7 +131,7 @@ function Menu({ addToCart }) {
             Flat <strong>50% OFF</strong> on your 1st order! (First 20 customers only)
           </p>
           <p style={{ margin: '4px 0 0 0', fontSize: '13px', fontWeight: '700', color: '#fff', background: 'rgba(0,0,0,0.2)', padding: '4px 12px', borderRadius: '99px', display: 'inline-block', marginTop: '8px' }}>
-            {timeLeft > 0 ? `Starts In: ${formatTime(timeLeft)}` : "🎁 OFFER IS LIVE NOW!"}
+            🎁 OFFER IS LIVE NOW!
           </p>
         </div>
         <div style={{
