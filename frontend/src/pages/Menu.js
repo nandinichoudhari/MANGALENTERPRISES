@@ -57,7 +57,8 @@ function Menu({ addToCart }) {
   const [quantities, setQuantities] = useState({});
   const [loading, setLoading] = useState(true);
   const [visibleCards, setVisibleCards] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(new Date('2026-05-03T20:30:00+05:30').getTime() - Date.now());
+  const TARGET_MS = new Date('2026-05-03T20:30:00+05:30').getTime();
+  const [timeLeft, setTimeLeft] = useState(TARGET_MS - Date.now());
 
   // Load quantities from localStorage
   useEffect(() => {
@@ -90,14 +91,17 @@ function Menu({ addToCart }) {
     return () => clearTimeout(timer);
   }, [activeTab]);
 
-  // ✅ Countdown timer logic
+  // ✅ Countdown timer — runs ONCE on mount, never restarts
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (TARGET_MS - Date.now() <= 0) return;
     const timer = setInterval(() => {
-      setTimeLeft(new Date('2026-05-03T20:30:00+05:30').getTime() - Date.now());
+      const remaining = TARGET_MS - Date.now();
+      setTimeLeft(remaining);
+      if (remaining <= 0) clearInterval(timer);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ Empty deps — NEVER recreates the interval
 
   const formatTime = (ms) => {
     if (ms <= 0) return "Offer is LIVE!";

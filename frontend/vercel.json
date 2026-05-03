@@ -5,6 +5,14 @@
             "destination": "/index.html"
         }
     ],
+    "redirects": [
+        {
+            "source": "/(.*)",
+            "has": [{ "type": "host", "value": "www.mangalenterprise.com" }],
+            "destination": "https://mangalenterprise.com/:path*",
+            "permanent": true
+        }
+    ],
     "headers": [
         {
             "source": "/(.*)",
@@ -29,4 +37,4 @@
             ]
         }
     ]
-}
+}

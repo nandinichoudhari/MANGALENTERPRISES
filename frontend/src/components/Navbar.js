@@ -1,7 +1,7 @@
 import "./Navbar.css";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiShoppingBag, FiPhone, FiSearch, FiX, FiUser, FiHome, FiGrid, FiLogIn, FiInfo } from "react-icons/fi";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PRODUCTS } from "../pages/Menu";
 
 const Navbar = ({ cartCount }) => {
@@ -10,22 +10,23 @@ const Navbar = ({ cartCount }) => {
   const [showResults, setShowResults] = useState(false);
   const [currentUserName, setCurrentUserName] = useState("User");
   const [showBottomNav, setShowBottomNav] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0); // ✅ useRef — never triggers re-renders or effect restarts
   const navigate = useNavigate();
 
-  // Handle scroll to hide/show bottom nav
+  // Handle scroll to hide/show bottom nav — runs ONCE on mount
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > lastScrollY && window.scrollY > 50) {
+      const currentY = window.scrollY;
+      if (currentY > lastScrollY.current && currentY > 50) {
         setShowBottomNav(false);
       } else {
         setShowBottomNav(true);
       }
-      setLastScrollY(window.scrollY);
+      lastScrollY.current = currentY; // ✅ update ref, no re-render
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, []); // ✅ Empty deps — listener registered exactly once
 
   // ✅ NEW: Load user name on mount
   useEffect(() => {
