@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "./static/css/main.01d226d7.css",
-    "main.js": "./static/js/main.58718405.js",
-    "index.html": "./index.html",
-    "main.01d226d7.css.map": "./static/css/main.01d226d7.css.map",
-    "main.58718405.js.map": "./static/js/main.58718405.js.map"
+    "main.css": "/MANGALENTERPRISES/static/css/main.01d226d7.css",
+    "main.js": "/MANGALENTERPRISES/static/js/main.133351ea.js",
+    "index.html": "/MANGALENTERPRISES/index.html",
+    "main.01d226d7.css.map": "/MANGALENTERPRISES/static/css/main.01d226d7.css.map",
+    "main.133351ea.js.map": "/MANGALENTERPRISES/static/js/main.133351ea.js.map"
   },
   "entrypoints": [
     "static/css/main.01d226d7.css",
-    "static/js/main.58718405.js"
+    "static/js/main.133351ea.js"
   ]
 }
