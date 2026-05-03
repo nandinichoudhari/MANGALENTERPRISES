@@ -33,7 +33,6 @@ function Cart({ items, setItems }) {
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState("");
   const [offerInfo, setOfferInfo] = useState(null);
-  const [checkingOffer, setCheckingOffer] = useState(false);
 
   // ✅ Check offer eligibility on mount
   useEffect(() => {
@@ -42,7 +41,6 @@ function Cart({ items, setItems }) {
       const phone = localStorage.getItem('phone');
       if (!email && !phone) return;
 
-      setCheckingOffer(true);
       try {
         const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/check-offer-eligibility?email=${email || ''}&phone=${phone || ''}`);
         const data = await res.json();
@@ -51,8 +49,6 @@ function Cart({ items, setItems }) {
         }
       } catch (err) {
         console.error("Failed to check offer:", err);
-      } finally {
-        setCheckingOffer(false);
       }
     };
     checkOffer();

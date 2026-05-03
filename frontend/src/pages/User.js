@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiUrl } from '../api';
 import { FiCheck, FiLoader, FiTruck, FiStar, FiPackage, FiMapPin, FiLogOut, FiEdit3, FiShoppingBag, FiCreditCard, FiPhone, FiMessageSquare } from "react-icons/fi";
-import InstallPWA from '../components/InstallPWA';
 
 const STEPS = [
   { key: 'confirmed', label: 'Order Confirmed', icon: <FiCheck /> },

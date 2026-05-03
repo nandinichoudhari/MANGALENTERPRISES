@@ -79,7 +79,7 @@ function Payment() {
       address: addr,
       applyOffer: shouldApplyOffer // 🔥 Send the offer flag
     };
-  }, [cartItems, total]);
+  }, [cartItems, total, discountTotal, shouldApplyOffer]);
 
   // ─────────────────────────────────────
   // COD Order

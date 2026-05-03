@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { FiStar, FiHome, FiShield, FiClock, FiHeart, FiTruck, FiTag } from "react-icons/fi";
-import InstallPWA from "../components/InstallPWA";
 
 function useCountUp(target, duration, active) {
   const [count, setCount] = useState(0);
