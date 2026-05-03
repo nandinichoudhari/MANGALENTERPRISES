@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const CountdownBanner = () => {
-  const TARGET_DATE = new Date('2026-05-03T20:30:00+05:30').getTime();
+  const TARGET_DATE = new Date('2026-05-03T15:00:00Z').getTime();
   const initialTimeLeft = TARGET_DATE - Date.now();
   const [timeLeft, setTimeLeft] = useState(initialTimeLeft > 0 ? initialTimeLeft : 0);
   const [isActive, setIsActive] = useState(initialTimeLeft > 0);

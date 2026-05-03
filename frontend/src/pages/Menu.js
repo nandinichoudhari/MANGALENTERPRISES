@@ -57,7 +57,7 @@ function Menu({ addToCart }) {
   const [quantities, setQuantities] = useState({});
   const [loading, setLoading] = useState(true);
   const [visibleCards, setVisibleCards] = useState([]);
-  const TARGET_MS = new Date('2026-05-03T20:30:00+05:30').getTime();
+  const TARGET_MS = new Date('2026-05-03T15:00:00Z').getTime();
   const [timeLeft, setTimeLeft] = useState(TARGET_MS - Date.now());
 
   // Load quantities from localStorage
