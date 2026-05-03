@@ -59,8 +59,8 @@ app.get('/', (req, res) => {
   res.json({
     status: 'running',
     message: 'Mangal Enterprises API is running',
-    frontend: 'http://localhost:3000',
-    admin: 'http://localhost:3000/admin-panel'
+    frontend: 'https://mangalenterprises.vercel.app',
+    admin: 'https://mangalenterprises.vercel.app/admin-panel'
   });
 });
 
