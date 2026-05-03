@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 
 const CountdownBanner = () => {
-  const targetDate = new Date('2026-05-03T20:30:00+05:30').getTime();
-  const [timeLeft, setTimeLeft] = useState(targetDate - Date.now());
-  const [isActive, setIsActive] = useState(timeLeft > 0);
+  const TARGET_DATE = new Date('2026-05-03T20:30:00+05:30').getTime();
+  const initialTimeLeft = TARGET_DATE - Date.now();
+  const [timeLeft, setTimeLeft] = useState(initialTimeLeft > 0 ? initialTimeLeft : 0);
+  const [isActive, setIsActive] = useState(initialTimeLeft > 0);
 
   useEffect(() => {
-    if (timeLeft <= 0) {
+    if (initialTimeLeft <= 0) {
       setIsActive(false);
       return;
     }
 
     const timer = setInterval(() => {
-      const now = Date.now();
-      const distance = targetDate - now;
+      const distance = TARGET_DATE - Date.now();
       
       if (distance <= 0) {
         clearInterval(timer);
@@ -25,7 +25,8 @@ const CountdownBanner = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetDate, timeLeft]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ Run ONCE on mount — never recreate the interval
 
   if (!isActive) return null;
 
