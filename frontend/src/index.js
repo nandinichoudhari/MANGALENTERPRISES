@@ -53,3 +53,18 @@ root.render(
     <App />
   </ErrorBoundary>
 );
+
+// ✅ Proactively unregister any lingering old Service Workers that cause blank screens for returning users
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (let registration of registrations) {
+      registration.unregister().then((boolean) => {
+        if (boolean) {
+          console.log("Unregistered old buggy service worker");
+          // Force a reload to fetch the new files from Vercel without the broken cache
+          window.location.reload();
+        }
+      });
+    }
+  });
+}
