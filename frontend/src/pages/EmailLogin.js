@@ -72,7 +72,12 @@ function EmailLogin() {
           if (result.user.phone) localStorage.setItem('phone', result.user.phone);
         }
 
-        navigate('/user');
+        const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+        if (cartItems.length > 0) {
+          navigate('/cart');
+        } else {
+          navigate('/user');
+        }
 
       } else {
         alert(result.message);

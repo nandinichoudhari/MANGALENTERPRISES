@@ -92,11 +92,7 @@ function Login() {
         // the user picks/saves an address. Setting it here overwrites the real one.
 
         const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
-        if (cartItems.length > 0) {
-          navigate("/address");   // go through address step before payment
-        } else {
-          navigate("/cart");
-        }
+        navigate("/cart");
 
       } else {
         alert(data.message || "Invalid OTP");

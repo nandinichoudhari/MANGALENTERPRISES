@@ -153,10 +153,8 @@ function Address() {
 
     // 🔥 FIX: SAVE CART DATA BEFORE PAYMENT
     const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-    const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
 
     localStorage.setItem('checkoutCart', JSON.stringify(cartItems));
-    localStorage.setItem('checkoutTotal', totalAmount.toString());
     localStorage.setItem('deliveryAddress', JSON.stringify(selectedAddress));  // 🔥 ADD THIS
     localStorage.setItem('selectedAddress', JSON.stringify(selectedAddress));
 

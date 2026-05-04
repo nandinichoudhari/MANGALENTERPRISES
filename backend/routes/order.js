@@ -65,7 +65,6 @@ router.post('/place-order', async (req, res) => {
         const existingOrdersCount = await Order.countDocuments({ $or: query });
         
         if (existingOrdersCount === 0) {
-          finalTotal = total * (1 - (offer.discountPercentage / 100));
           offerApplied = 'FIRST20_OFFER';
           
           // Increment usage

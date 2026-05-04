@@ -5,6 +5,7 @@ const Razorpay = require('razorpay');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Order = require('../models/Order');
+const Promotion = require('../models/Promotion');
 
 /* ========================================
    RAZORPAY INSTANCE (Test Mode - Lazy Init)
@@ -94,6 +95,28 @@ router.post('/verify', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Payment verification failed — signature mismatch' });
         }
 
+        let offerApplied = null;
+        if (orderDetails.applyOffer) {
+            const offer = await Promotion.findOne({ code: 'FIRST20_OFFER', isActive: true });
+            if (offer && new Date() >= offer.startTime && offer.currentUsage < offer.maxUsage) {
+                const query = [];
+                if (orderDetails.userEmail) query.push({ userEmail: orderDetails.userEmail });
+                if (orderDetails.userPhone) query.push({ userPhone: orderDetails.userPhone });
+                const existingOrdersCount = await Order.countDocuments({ $or: query });
+
+                if (existingOrdersCount === 0) {
+                    offerApplied = 'FIRST20_OFFER';
+                    await Promotion.updateOne(
+                        { code: 'FIRST20_OFFER' },
+                        {
+                            $inc: { currentUsage: 1 },
+                            $push: { users: orderDetails.userEmail || orderDetails.userPhone }
+                        }
+                    );
+                }
+            }
+        }
+
         // Step 2: Signature is valid — save the order
         const order = {
             _id: new mongoose.Types.ObjectId(),
@@ -108,6 +131,7 @@ router.post('/verify', async (req, res) => {
             razorpayOrderId: razorpay_order_id,
             razorpayPaymentId: razorpay_payment_id,
             status: 'confirmed',
+            offerApplied,
             timestamp: new Date(),
         };
 

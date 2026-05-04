@@ -38,7 +38,7 @@ function Cart({ items, setItems }) {
   // ✅ Check offer eligibility on mount
   useEffect(() => {
     const checkOffer = async () => {
-      const email = localStorage.getItem('email');
+      const email = localStorage.getItem('userEmail') || localStorage.getItem('currentUserEmail');
       const phone = localStorage.getItem('phone');
       if (!email && !phone) return;
 
