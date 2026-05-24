@@ -3,11 +3,14 @@ const Subscription = require('../models/Subscription');
 const axios = require('axios');
 
 // Configure VAPID details for Web Push
-if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+const pubKey = process.env.VAPID_PUBLIC_KEY || 'BLhjE6JTljVAHe6E4nM1wGAXT95C1vIXbZUtnMzVIEbgM20FGuHa_WCHGqAgb_exYBaC3329XkpV-PCeuo44XdA';
+const privKey = process.env.VAPID_PRIVATE_KEY || 'nj_wBKbtJsRp1ftDB4BTxKnfLlcgYwG6zyaQ7hnkyvk';
+
+if (pubKey && privKey) {
   webPush.setVapidDetails(
     'mailto:admin@mangalenterprise.com',
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
+    pubKey,
+    privKey
   );
   console.log('📶 Web Push configured successfully!');
 } else {

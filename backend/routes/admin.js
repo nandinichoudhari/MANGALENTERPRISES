@@ -52,7 +52,7 @@ router.get('/data', async (req, res) => {
 
 // GET /api/admin/vapid-public-key — expose public VAPID key
 router.get('/vapid-public-key', (req, res) => {
-  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || 'BLhjE6JTljVAHe6E4nM1wGAXT95C1vIXbZUtnMzVIEbgM20FGuHa_WCHGqAgb_exYBaC3329XkpV-PCeuo44XdA' });
 });
 
 // POST /api/admin/subscribe — store a new subscription
