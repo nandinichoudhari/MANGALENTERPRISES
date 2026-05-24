@@ -1,6 +1,7 @@
 const express = require('express');
 const User = require('../models/User');
 const Order = require('../models/Order');
+const Subscription = require('../models/Subscription');
 const router = express.Router();
 
 // GET /api/admin/data — orders + customers for admin panel
@@ -46,6 +47,51 @@ router.get('/data', async (req, res) => {
   } catch (error) {
     console.error('❌ Admin data error:', error.message);
     res.status(500).json({ orders: [], logins: [], error: error.message });
+  }
+});
+
+// GET /api/admin/vapid-public-key — expose public VAPID key
+router.get('/vapid-public-key', (req, res) => {
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+});
+
+// POST /api/admin/subscribe — store a new subscription
+router.post('/subscribe', async (req, res) => {
+  try {
+    const { endpoint, keys } = req.body;
+    if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      return res.status(400).json({ success: false, message: 'Invalid subscription object' });
+    }
+
+    // Upsert the subscription so we don't save duplicates
+    await Subscription.findOneAndUpdate(
+      { endpoint },
+      { endpoint, keys, createdAt: new Date() },
+      { upsert: true, new: true }
+    );
+
+    console.log('🔔 New admin push subscription registered!');
+    res.json({ success: true, message: 'Subscription saved successfully' });
+  } catch (error) {
+    console.error('❌ Subscription error:', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/admin/unsubscribe — remove subscription
+router.post('/unsubscribe', async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    if (!endpoint) {
+      return res.status(400).json({ success: false, message: 'Endpoint required' });
+    }
+
+    await Subscription.deleteOne({ endpoint });
+    console.log('🔕 Admin push subscription removed!');
+    res.json({ success: true, message: 'Subscription removed successfully' });
+  } catch (error) {
+    console.error('❌ Unsubscribe error:', error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

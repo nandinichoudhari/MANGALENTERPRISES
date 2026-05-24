@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const Promotion = require('../models/Promotion');
+const { notifyNewOrder } = require('../utils/notifier');
 
 /* ========================================
    RAZORPAY INSTANCE (Test Mode - Lazy Init)
@@ -150,6 +151,9 @@ router.post('/verify', async (req, res) => {
         await newOrder.save();
 
         console.log('✅ Razorpay Payment Verified & Order Saved:', order.orderId, '| Payment:', razorpay_payment_id);
+
+        // 🔔 Notify admin (asynchronous, non-blocking)
+        notifyNewOrder(newOrder).catch(err => console.error('🚨 Admin notification failure:', err));
 
         res.json({
             success: true,

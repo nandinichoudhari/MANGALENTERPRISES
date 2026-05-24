@@ -54,17 +54,21 @@ root.render(
   </ErrorBoundary>
 );
 
-// ✅ Proactively unregister any lingering old Service Workers that cause blank screens for returning users
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (let registration of registrations) {
-      registration.unregister().then((boolean) => {
-        if (boolean) {
-          console.log("Unregistered old buggy service worker");
-          // Force a reload to fetch the new files from Vercel without the broken cache
-          window.location.reload();
-        }
-      });
+  window.addEventListener('load', async () => {
+    // Unregister any previous service workers to ensure no stale caches remain
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) {
+      try {
+        await reg.unregister();
+        console.log('🧹 Unregistered old service worker:', reg.scope);
+      } catch (e) {
+        console.error('❌ Failed to unregister SW', e);
+      }
     }
+    // Register the fresh service worker for the PWA
+    navigator.serviceWorker.register('/service-worker.js')
+      .then((reg) => console.log('✅ Service Worker registered with scope:', reg.scope))
+      .catch((err) => console.error('❌ Service Worker registration failed:', err));
   });
 }

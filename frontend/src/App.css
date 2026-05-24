@@ -151,3 +151,28 @@ body {
   .page-content { padding: 16px; }
   .grid { grid-template-columns: 1fr; }
 }
+
+/* ==========================================
+   🚨 MANGAL PARTNER ALARM OVERLAY KEYFRAMES
+   ========================================== */
+@keyframes pulseBg {
+  0% { background: rgba(44, 24, 16, 0.7); }
+  100% { background: rgba(198, 40, 40, 0.45); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulseIcon {
+  from { transform: scale(1); filter: drop-shadow(0 0 2px rgba(198, 40, 40, 0.3)); }
+  to { transform: scale(1.18); filter: drop-shadow(0 0 15px rgba(198, 40, 40, 0.9)); }
+}
+
+@keyframes pulseButton {
+  0% { transform: scale(1); box-shadow: 0 4px 6px rgba(198, 40, 40, 0.2); }
+  50% { transform: scale(1.03); box-shadow: 0 10px 25px rgba(198, 40, 40, 0.6); }
+  100% { transform: scale(1); box-shadow: 0 4px 6px rgba(198, 40, 40, 0.2); }
+}
+

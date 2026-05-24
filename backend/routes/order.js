@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User'); 
 const Order = require('../models/Order');
 const Promotion = require('../models/Promotion');
+const { notifyNewOrder } = require('../utils/notifier');
 
 // 🔥 REPLACE YOUR /place-order route with this:
 // 🔥 NEW: CHECK OFFER ELIGIBILITY
@@ -108,6 +109,9 @@ router.post('/place-order', async (req, res) => {
     // 🔥 2. ALSO SAVE to SEPARATE Orders collection
     const newOrder = new Order(order);
     await newOrder.save();
+
+    // 🔔 Notify admin (asynchronous, non-blocking)
+    notifyNewOrder(newOrder).catch(err => console.error('🚨 Admin notification failure:', err));
 
     res.json({ success: true, orderId: order.orderId, finalTotal, offerApplied });
   } catch (error) {

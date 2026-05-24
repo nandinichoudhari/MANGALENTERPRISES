@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { apiUrl } from './api';
 
 /* ─── colour tokens ─── */
@@ -30,9 +30,73 @@ const fmtTime = d => {
   return dt.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
+/* ─── Web Audio API Ringing Siren Helpers ─── */
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+let alarmInterval = null;
+const startAlarmSound = () => {
+  if (alarmInterval) return;
+  const playBeep = () => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      
+      // Tone 1: High pitch double-ring base
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(880, now); // A5 note
+      osc1.frequency.exponentialRampToValueAtTime(1100, now + 0.15);
+      gain1.gain.setValueAtTime(0.3, now);
+      gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.3);
+      
+      // Tone 2: Shorter high squeal for cash register alert feel
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1000, now + 0.2);
+      osc2.frequency.exponentialRampToValueAtTime(1300, now + 0.35);
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.setValueAtTime(0.3, now + 0.2);
+      gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(now + 0.2);
+      osc2.stop(now + 0.5);
+    } catch (e) {
+      console.warn("Audio Context blocked or unsupported:", e);
+    }
+  };
+  playBeep();
+  alarmInterval = setInterval(playBeep, 1200);
+};
+
+const stopAlarmSound = () => {
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+};
+
 /* ================================================================ */
 function AdminDashboard() {
-  const [auth, setAuth] = useState(false);
+  const [auth, setAuth] = useState(() => localStorage.getItem('mangal_admin_auth') === 'true');
   const [pw, setPw] = useState('');
   const [tab, setTab] = useState('overview');
   const [data, setData] = useState({ orders: [], logins: [] });
@@ -40,15 +104,109 @@ function AdminDashboard() {
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState('all');
 
-  /* ── fetch ─────────────────────────────── */
-  const fetchData = async () => {
+  const [pushSupported, setPushSupported] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [alarmEnabled, setAlarmEnabled] = useState(() => localStorage.getItem('mangal_alarm_enabled') !== 'false');
+  const [newOrderAlert, setNewOrderAlert] = useState(null);
+
+  /* ── check browser push capabilities ── */
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setPushSupported(true);
+      navigator.serviceWorker.ready.then(reg => {
+        reg.pushManager.getSubscription().then(sub => {
+          setIsSubscribed(!!sub);
+        });
+      });
+    }
+  }, []);
+
+  const subscribeUser = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        alert('Permission not granted for notifications');
+        return;
+      }
+      const reg = await navigator.serviceWorker.ready;
+      const res = await fetch(apiUrl('/api/admin/vapid-public-key'));
+      const { publicKey } = await res.json();
+      if (!publicKey) throw new Error('VAPID public key not found on backend');
+
+      const convertedKey = urlBase64ToUint8Array(publicKey);
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedKey
+      });
+
+      const subRes = await fetch(apiUrl('/api/admin/subscribe'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+      const subData = await subRes.json();
+      if (subData.success) {
+        setIsSubscribed(true);
+        alert('🔔 Notifications enabled! You will now receive alerts even when this app is closed.');
+      } else {
+        alert('Failed to register subscription on server.');
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      alert('Failed to enable background notifications: ' + error.message);
+    }
+  };
+
+  const unsubscribeUser = async () => {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await sub.unsubscribe();
+        await fetch(apiUrl('/api/admin/unsubscribe'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: sub.endpoint })
+        });
+      }
+      setIsSubscribed(false);
+      alert('Notifications disabled.');
+    } catch (error) {
+      console.error('Unsubscribe error:', error);
+    }
+  };
+
+  /* ── fetch data with live order alerting ── */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const r = await fetch(apiUrl('/api/admin/data'));
-      if (r.ok) setData(await r.json());
-    } catch { /* backend offline */ }
+      if (r.ok) {
+        const json = await r.json();
+        const incomingOrders = json.orders || [];
+        
+        setData(prev => {
+          if (prev.orders && prev.orders.length > 0) {
+            const prevIds = new Set(prev.orders.map(o => o.orderId));
+            const newOrders = incomingOrders.filter(o => o.orderId && !prevIds.has(o.orderId));
+            
+            if (newOrders.length > 0) {
+              console.log('🚨 New order(s) detected:', newOrders);
+              setNewOrderAlert(newOrders[0]);
+              if (alarmEnabled) {
+                startAlarmSound();
+              }
+            }
+          }
+          return json;
+        });
+      }
+    } catch (err) {
+      console.error('Backend offline:', err);
+    }
     setLoading(false);
-  };
+  }, [alarmEnabled]); // alarmEnabled controls whether sound plays
 
   /* ── update order status ────────────────── */
   const updateOrderStatus = async (orderId, newStatus) => {
@@ -60,7 +218,6 @@ function AdminDashboard() {
       });
       const result = await r.json();
       if (result.success) {
-        // Update local state immediately for responsive UI
         setData(prev => ({
           ...prev,
           orders: prev.orders.map(o => o.orderId === orderId ? { ...o, status: newStatus } : o)
@@ -69,7 +226,16 @@ function AdminDashboard() {
     } catch { /* silent */ }
   };
 
-  useEffect(() => { if (auth) fetchData(); }, [auth]);
+  /* ── auto-polling for new orders ── */
+  useEffect(() => {
+    if (!auth) return;
+    fetchData(); // load initially
+    const interval = setInterval(fetchData, 10000); // poll every 10 seconds
+    return () => {
+      clearInterval(interval);
+      stopAlarmSound(); // safety cleanup
+    };
+  }, [auth, fetchData]);
 
   /* ── build customers from BOTH registered users AND orders ── */
   const customers = useMemo(() => {
@@ -175,9 +341,13 @@ function AdminDashboard() {
 
   /* ── login ─────────────────────────────── */
   function tryLogin() {
-    if (pw === 'mangal123') { setAuth(true); }
+    if (pw === 'mangal123') { 
+      setAuth(true); 
+      localStorage.setItem('mangal_admin_auth', 'true');
+    }
     else alert('Incorrect password');
   }
+
 
   if (!auth) return (
     <div style={loginWrap}>
@@ -228,8 +398,86 @@ function AdminDashboard() {
             </button>
           ))}
         </nav>
+
+        {/* Alerts & Sound Settings in Sidebar */}
+        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,.08)', borderBottom: '1px solid rgba(255,255,255,.08)', color: 'rgba(255,255,255,.7)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.45)', marginBottom: 12, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700 }}>Partner Terminal</div>
+          
+          {/* Sound Toggle */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <span style={{ fontSize: 13, color: 'rgba(255,255,255,.75)' }}>🔊 Ringing Alarm</span>
+            <input 
+              type="checkbox" 
+              checked={alarmEnabled} 
+              onChange={(e) => {
+                setAlarmEnabled(e.target.checked);
+                localStorage.setItem('mangal_alarm_enabled', e.target.checked ? 'true' : 'false');
+              }}
+              style={{ cursor: 'pointer' }}
+            />
+          </div>
+
+          {/* Test Sound Button */}
+          <button 
+            onClick={() => {
+              try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(988, now);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+              } catch (e) {}
+            }}
+            style={{ 
+              width: '100%', 
+              padding: '6px 12px', 
+              background: 'rgba(255,255,255,0.08)', 
+              border: 'none', 
+              borderRadius: 6, 
+              color: 'rgba(255,255,255,.85)', 
+              fontSize: 12, 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              marginBottom: 14,
+              fontFamily: font
+            }}
+          >
+            🔔 Test Speaker
+          </button>
+
+          {/* Background Push Toggle */}
+          {pushSupported ? (
+            <button 
+              onClick={isSubscribed ? unsubscribeUser : subscribeUser}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                background: isSubscribed ? '#2E7D32' : '#8B4513',
+                border: 'none',
+                borderRadius: 6,
+                color: '#fff',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: font
+              }}
+            >
+              {isSubscribed ? '🟢 Mobile Alerts: ON' : '🔔 Enable Mobile Alerts'}
+            </button>
+          ) : (
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>Mobile push not supported</div>
+          )}
+        </div>
+
         <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,.08)' }}>
-          <button onClick={() => { setAuth(false); setPw(''); }} style={{
+          <button onClick={() => { setAuth(false); setPw(''); localStorage.removeItem('mangal_admin_auth'); }} style={{
             ...navItem, color: 'rgba(255,255,255,.4)', fontSize: 13
           }}>Sign Out</button>
         </div>
@@ -443,9 +691,78 @@ function AdminDashboard() {
           </div>
         )}
       </main>
+
+      {/* Flashing Full-Screen Alarm Overlay */}
+      {newOrderAlert && (
+        <div style={overlayStyle}>
+          <div style={overlayCardStyle}>
+            <div style={overlayHeader}>
+              <div style={alarmIconStyle}>🚨</div>
+              <h2 style={overlayTitle}>NEW ORDER RECEIVED!</h2>
+              <p style={{ margin: '4px 0 0', fontSize: 14, color: C.sub }}>
+                Mangal Partner Terminal
+              </p>
+            </div>
+            
+            <div style={overlayBody}>
+              <div style={{ marginBottom: 16 }}>
+                <span style={{ ...orderIdBadge, fontSize: 16, padding: '6px 14px' }}>
+                  {newOrderAlert.orderId}
+                </span>
+              </div>
+
+              <div style={overlayInfoGrid}>
+                <div style={infoRow}><strong>Customer:</strong> <span>{newOrderAlert.userName || '—'}</span></div>
+                <div style={infoRow}><strong>Phone:</strong> <span>{newOrderAlert.userPhone || '—'}</span></div>
+                {newOrderAlert.userEmail && (
+                  <div style={infoRow}><strong>Email:</strong> <span>{newOrderAlert.userEmail}</span></div>
+                )}
+                <div style={infoRow}>
+                  <strong>Items:</strong> 
+                  <div style={{ textAlign: 'right', maxWidth: '200px' }}>
+                    {(newOrderAlert.items || []).map((it, idx) => (
+                      <div key={idx} style={{ fontSize: 13 }}>{it.name} x{it.quantity || 1}</div>
+                    ))}
+                  </div>
+                </div>
+                <div style={infoRow}>
+                  <strong>Delivery Address:</strong>
+                  <div style={{ textAlign: 'right', maxWidth: '200px', fontSize: 13 }}>
+                    {newOrderAlert.address?.address1 ? (
+                      <>
+                        {newOrderAlert.address.address1}, {newOrderAlert.address.city}
+                      </>
+                    ) : '—'}
+                  </div>
+                </div>
+                <div style={infoRow}>
+                  <strong>Total Amount:</strong>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: C.green }}>
+                    {rupee(newOrderAlert.total)}
+                  </span>
+                </div>
+                <div style={infoRow}><strong>Payment Method:</strong> <span>{(newOrderAlert.paymentMethod || 'cod').toUpperCase()}</span></div>
+              </div>
+            </div>
+            
+            <div style={overlayFooter}>
+              <button 
+                onClick={() => {
+                  stopAlarmSound();
+                  setNewOrderAlert(null);
+                }} 
+                style={acknowledgeBtn}
+              >
+                Acknowledge & Stop Alarm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 /* ─── tiny components ─── */
 function KPI({ label, value, sub, color }) {
@@ -514,4 +831,92 @@ const statusColors = {
 };
 const statusSelect = { padding: '5px 10px', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: font, outline: 'none' };
 
+/* ─── New Order Alarm Overlay Styles ─── */
+const overlayStyle = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 9999,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  animation: 'pulseBg 0.7s ease-in-out infinite alternate',
+  padding: '16px',
+};
+
+const overlayCardStyle = {
+  background: '#fff',
+  borderRadius: 20,
+  width: '100%',
+  maxWidth: 480,
+  boxShadow: '0 30px 100px rgba(0,0,0,0.4)',
+  animation: 'slideUp 0.4s ease-out forwards',
+  overflow: 'hidden',
+  fontFamily: font,
+};
+
+const overlayHeader = {
+  background: `linear-gradient(135deg, ${C.sidebar}, ${C.accent})`,
+  padding: '28px 28px 20px',
+  textAlign: 'center',
+  color: '#fff',
+};
+
+const alarmIconStyle = {
+  fontSize: 52,
+  display: 'block',
+  marginBottom: 10,
+  animation: 'pulseIcon 0.6s ease-in-out infinite alternate',
+};
+
+const overlayTitle = {
+  fontSize: 22,
+  fontWeight: 900,
+  color: '#fff',
+  letterSpacing: 1.5,
+  margin: 0,
+  textTransform: 'uppercase',
+};
+
+const overlayBody = {
+  padding: '20px 28px',
+};
+
+const overlayInfoGrid = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 12,
+};
+
+const infoRow = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  padding: '10px 0',
+  borderBottom: `1px solid ${C.border}`,
+  fontSize: 14,
+  color: C.text,
+  gap: 12,
+};
+
+const overlayFooter = {
+  padding: '20px 28px 28px',
+  textAlign: 'center',
+};
+
+const acknowledgeBtn = {
+  width: '100%',
+  padding: '16px 24px',
+  background: `linear-gradient(135deg, ${C.red}, #b71c1c)`,
+  color: '#fff',
+  border: 'none',
+  borderRadius: 12,
+  fontSize: 16,
+  fontWeight: 800,
+  cursor: 'pointer',
+  fontFamily: font,
+  letterSpacing: 0.5,
+  animation: 'pulseButton 1s ease-in-out infinite',
+};
+
 export default AdminDashboard;
+

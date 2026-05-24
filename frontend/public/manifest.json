@@ -1,25 +1,41 @@
 {
-  "short_name": "Mangal",
-  "name": "Mangal Enterprises | Authentic Homemade Food",
+  "short_name": "Mangal Partner",
+  "name": "Mangal Enterprises | Partner App",
+  "description": "Mangal Partner Admin App — Manage orders, get instant alerts, and run your business from your phone.",
   "icons": [
     {
-      "src": "logo192.png",
+      "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/png"
+      "type": "image/x-icon"
     },
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/admin-panel",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#ea580c",
-  "background_color": "#ffffff"
+  "orientation": "portrait",
+  "theme_color": "#2C1810",
+  "background_color": "#2C1810",
+  "shortcuts": [
+    {
+      "name": "Admin Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open the Mangal Partner order dashboard",
+      "url": "/admin-panel",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["business", "food"],
+  "prefer_related_applications": false
 }

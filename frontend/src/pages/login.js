@@ -91,7 +91,6 @@ function Login() {
         // NOTE: Do NOT set deliveryAddress here — Address.js sets it when
         // the user picks/saves an address. Setting it here overwrites the real one.
 
-        const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
         navigate("/cart");
 
       } else {

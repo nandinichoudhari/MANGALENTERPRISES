@@ -1,58 +1,79 @@
-/* eslint-disable no-restricted-globals */
-
-// This is a minimal service worker to satisfy PWA requirements but correctly handle updates
-const CACHE_NAME = 'mangal-cache-v2'; // Bumped version
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/logo192.png',
-  '/logo512.png',
-];
+// This service worker acts as a KILL SWITCH to clear all caches for returning users who have a blank screen.
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Force the waiting service worker to become the active service worker.
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-  );
 });
 
-// Clear old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Clearing old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
+          console.log('Clearing old cache:', cacheName);
+          return caches.delete(cacheName);
         })
       );
     }).then(() => self.clients.claim()) // Take control of all pages immediately
   );
 });
 
-// Network First, falling back to cache
+// Pass through all fetch requests, bypassing any cache.
 self.addEventListener('fetch', (event) => {
-  // Only intercept GET requests
-  if (event.request.method !== 'GET') return;
+  event.respondWith(fetch(event.request));
+});
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If network fetch succeeds, update the cache and return the response
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // If network fails (offline), return from cache
-        return caches.match(event.request);
-      })
+// ==========================================
+// 🔔 BACKGROUND WEB PUSH NOTIFICATION HANDLERS
+// ==========================================
+
+self.addEventListener('push', (event) => {
+  let data = { title: '🚨 New Order!', body: 'You have received a new order on Mangal Enterprises.' };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = { title: '🚨 New Order!', body: event.data.text() };
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: '/logo192.png',
+    badge: '/logo192.png',
+    vibrate: [100, 50, 100, 50, 300, 100, 300],
+    data: {
+      url: data.url || '/admin-panel'
+    },
+    tag: 'mangal-new-order',
+    renotify: true,
+    requireInteraction: true // Keeps the banner on the screen until clicked
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
   );
 });
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/admin-panel';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // 1. If an admin dashboard is already open, focus it and navigate
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url.includes('/admin-panel') && 'focus' in client) {
+          client.navigate(targetUrl); // Ensure it reloads/goes to the active target
+          return client.focus();
+        }
+      }
+      
+      // 2. If no dashboard window is open, open a new one in the standalone PWA frame
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
