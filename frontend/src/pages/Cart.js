@@ -280,7 +280,7 @@ function Cart({ items, setItems }) {
         </div>
         {offerInfo && (
           <div className="summary-row" style={{ color: '#2e7d32', fontWeight: '600' }}>
-            <span>Discount (50% Off - 1st Order):</span>
+            <span>Discount ({offerInfo.discountPercentage}% Off - 1st Order):</span>
             <span>−₹{discountAmount}</span>
           </div>
         )}

@@ -112,38 +112,7 @@ function Menu({ addToCart }) {
 
   return (
     <>
-      {/* Promotional Banner */}
-      <div className="promo-banner" style={{
-        background: 'linear-gradient(135deg, #f97316, #ea580c)',
-        color: 'white',
-        padding: '12px 20px',
-        textAlign: 'center',
-        borderRadius: '12px',
-        marginBottom: '20px',
-        boxShadow: '0 4px 12px rgba(234, 88, 12, 0.2)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>🎁 Special Launch Offer!</h3>
-          <p style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: 0.9 }}>
-            Flat <strong>50% OFF</strong> on your 1st order! (First 20 customers only)
-          </p>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', fontWeight: '700', color: '#fff', background: 'rgba(0,0,0,0.2)', padding: '4px 12px', borderRadius: '99px', display: 'inline-block', marginTop: '8px' }}>
-            🎁 OFFER IS LIVE NOW!
-          </p>
-        </div>
-        <div style={{
-          position: 'absolute',
-          top: '-20px',
-          right: '-20px',
-          width: '80px',
-          height: '80px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '50%'
-        }} />
-      </div>
+
 
       <h2 className="page-title">Our Menu</h2>
 

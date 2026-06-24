@@ -395,7 +395,7 @@ mongoose.connect(process.env.MONGO_URI, {
       // Index might not exist or already be correct
     });
 
-    // ✅ INITIALIZE FIRST 20 CUSTOMERS OFFER
+    // ✅ INITIALIZE FIRST 20 CUSTOMERS OFFER (Deactivated)
     const initOffer = async () => {
       try {
         const startTime = new Date('2026-05-03T20:30:00+05:30'); // 8:30 PM IST
@@ -408,13 +408,13 @@ mongoose.connect(process.env.MONGO_URI, {
             maxUsage: 20,
             currentUsage: 0,
             startTime: startTime,
-            isActive: true
+            isActive: false
           });
-          console.log('🎁 FIRST20_OFFER initialized in DB');
+          console.log('🎁 FIRST20_OFFER initialized in DB (inactive)');
         } else {
-          // Ensure start time is correct if it already exists but we want to update it
-          // Only update if it hasn't been used yet or if you want to force it
-          // await Promotion.updateOne({ code: 'FIRST20_OFFER' }, { startTime });
+          // If it exists, update it to isActive: false to disable the 50% discount
+          await Promotion.updateOne({ code: 'FIRST20_OFFER' }, { $set: { isActive: false } });
+          console.log('🎁 FIRST20_OFFER set to inactive in DB');
         }
       } catch (err) {
         console.error('❌ Failed to init offer:', err.message);

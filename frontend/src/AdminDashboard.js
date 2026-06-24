@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { apiUrl } from './api';
+import './admin_responsive.css';
 
 /* ─── colour tokens ─── */
 const C = {
@@ -101,6 +102,8 @@ function AdminDashboard() {
   const [tab, setTab] = useState('overview');
   const [data, setData] = useState({ orders: [], logins: [] });
   const [loading, setLoading] = useState(false);
+  // Mobile navigation state
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState('all');
 
@@ -222,6 +225,11 @@ function AdminDashboard() {
           ...prev,
           orders: prev.orders.map(o => o.orderId === orderId ? { ...o, status: newStatus } : o)
         }));
+        // If this order triggered the alarm, stop it and clear the alert
+        if (newOrderAlert && newOrderAlert.orderId === orderId) {
+          stopAlarmSound();
+          setNewOrderAlert(null);
+        }
       }
     } catch { /* silent */ }
   };
@@ -379,7 +387,7 @@ function AdminDashboard() {
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: font, color: C.text, background: C.bg }}>
 
       {/* ── SIDEBAR ── */}
-      <aside style={sidebar}>
+      <aside style={sidebar} className={mobileNavOpen ? 'sidebar open' : 'sidebar'}>
         <div style={{ padding: '28px 24px 20px', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: .5 }}>Mangal Enterprises</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,.45)', marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Admin Panel</div>
@@ -484,11 +492,15 @@ function AdminDashboard() {
       </aside>
 
       {/* ── MAIN CONTENT ── */}
-      <main style={{ flex: 1, padding: '28px 36px', overflowY: 'auto', maxHeight: '100vh' }}>
+      <main className={mobileNavOpen ? 'mainContentShift' : ''} style={{ flex: 1, padding: '28px 36px', overflowY: 'auto', maxHeight: '100vh' }}>
 
         {/* top bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-          <div>
+          <div className="topBarLeft">
+            {/* Hamburger for mobile */}
+            <button className="hamburgerBtn" onClick={() => setMobileNavOpen(!mobileNavOpen)} aria-label="Toggle navigation">
+              <span className="hamburgerIcon">☰</span>
+            </button>
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>
               {tab === 'overview' ? 'Dashboard Overview' : tab === 'orders' ? 'Order Management' : 'Customer Management'}
             </h1>

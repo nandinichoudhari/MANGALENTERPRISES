@@ -1,0 +1,106 @@
+/* admin_responsive.css */
+/* Mobile drawer for sidebar */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100vh;
+    background: #2C1810; /* match C.sidebar */
+    transition: left 0.3s ease-in-out;
+    z-index: 1000;
+    overflow-y: auto;
+    padding-top: 60px; /* space for top bar */
+  }
+  .sidebar.open {
+    left: 0;
+  }
+  .hamburgerBtn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 12px;
+  }
+  .topBarLeft {
+    display: flex;
+    align-items: center;
+  }
+  .hamburgerIcon {
+    display: inline-block;
+  }
+  /* Ensure main content shifts when drawer open */
+  .mainContentShift {
+    margin-left: 250px;
+    transition: margin-left 0.3s ease-in-out;
+  }
+  /* Orders container adjustments */
+  .ordersContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .orderCard {
+    background: #fff;
+    border: 1px solid #E8DFD5;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .orderCard select,
+  .orderCard button {
+    min-height: 44px;
+  }
+}
+
+/* Desktop tweaks */
+@media (min-width: 769px) {
+  .sidebar {
+    position: relative;
+    left: 0;
+    width: 250px;
+    height: auto;
+  }
+  .hamburgerBtn {
+    display: none;
+  }
+}
+
+/* Additional mobile enhancements */
+@media (max-width: 480px) {
+  .topBarLeft h1 {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+  }
+  .topBarLeft p {
+    font-size: 0.9rem;
+  }
+  .hamburgerBtn {
+    font-size: 28px;
+    margin-right: 8px;
+  }
+  .orderCard {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  .orderCard select,
+  .orderCard button {
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+  .kpiGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .cardStyle {
+    padding: 12px;
+  }
+  .sidebar {
+    width: 100%;
+  }
+}
