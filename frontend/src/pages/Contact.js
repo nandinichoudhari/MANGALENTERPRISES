@@ -5,7 +5,17 @@ function Contact() {
     <>
       <h2 className="page-title">Contact & Orders</h2>
       <div className="text-box">
-        <p style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}><FiMapPin size={16} color="#ea580c" /> <strong>Address:</strong> Dombivli East</p>
+        <p style={{display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px'}}>
+          <FiMapPin size={16} color="#ea580c" style={{ marginTop: '4px', flexShrink: 0 }} /> 
+          <span>
+            <strong>Address:</strong><br />
+            Room No. 302, Shri Mandar Society,<br />
+            Near Subhash Dairy,<br />
+            Gandhinagar, Dombivli,<br />
+            Dombivli East,<br />
+            Thane, Maharashtra – 421201
+          </span>
+        </p>
         <p style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}><FiMail size={16} color="#ea580c" /> <strong>Email:</strong> <a href="mailto:choudharimangal0@gmail.com">choudharimangal0@gmail.com</a></p>
         <p style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}><FiPhone size={16} color="#ea580c" /> <strong>Phone/WhatsApp:</strong> <a href="https://wa.me/919892512137" target="_blank" rel="noopener noreferrer">98925 12137</a></p>
         <p style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}><FiClock size={16} color="#ea580c" /> <strong>Timings:</strong> 9 AM - 11 PM</p>
